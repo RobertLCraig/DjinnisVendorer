@@ -28,10 +28,25 @@ local _PickupMerchantItem		= _G.PickupMerchantItem;
 local _ShowMerchantSellCursor	= _G.ShowMerchantSellCursor;
 local _GetMerchantItemCostInfo 	= _G.GetMerchantItemCostInfo;
 local _GetMerchantItemCostItem 	= _G.GetMerchantItemCostItem;
-local _GetMerchantItemInfo 		= _G.GetMerchantItemInfo;
 local _GetMerchantItemLink 		= _G.GetMerchantItemLink;
 local _GetMerchantItemMaxStack 	= _G.GetMerchantItemMaxStack;
 local _GetMerchantNumItems 		= _G.GetMerchantNumItems;
+
+-- Capture the raw C_MerchantFrame.GetItemInfo before we wrap it below. This is
+-- the source of truth that our filter evaluation uses, so it must not go
+-- through the filter redirect (which operates on display indices).
+local _C_MerchantFrame_GetItemInfo = C_MerchantFrame and C_MerchantFrame.GetItemInfo;
+
+local function _GetMerchantItemInfo(index)
+	if not _C_MerchantFrame_GetItemInfo then
+		return;
+	end
+	local info = _C_MerchantFrame_GetItemInfo(index);
+	if not info then return end
+	return info.name, info.texture, info.price, info.stackCount,
+		info.numAvailable, info.isPurchasable, info.isUsable,
+		info.hasExtendedCost, info.currencyID;
+end
 
 local _GameTooltip_SetMerchantItem = GameTooltip.SetMerchantItem;
 local _GameTooltip_SetMerchantCostItem = GameTooltip.SetMerchantCostItem;
@@ -113,12 +128,41 @@ end
 
 _G.GetMerchantItemInfo = function(index)
 	if(not index) then return end
-	
+
 	if(not FilteredMerchantItems[index]) then Addon:RefreshFilteredItems(); end
 	if(#FilteredMerchantItems == 0) then return end
 	if (not FilteredMerchantItems[index]) then return end
-	
+
 	return _GetMerchantItemInfo(FilteredMerchantItems[index]);
+end
+
+-- Midnight's MerchantFrame_UpdateMerchantInfo / MerchantItemButton_OnClick
+-- call C_MerchantFrame.GetItemInfo(index) directly instead of the _G global,
+-- so the button visuals and click handler bypass our _G override. Redirect
+-- the C_API too so display, tooltip, and purchase all see filtered items.
+if _C_MerchantFrame_GetItemInfo then
+	C_MerchantFrame.GetItemInfo = function(index)
+		if(not index) then return end
+
+		if(not FilteredMerchantItems[index]) then Addon:RefreshFilteredItems(); end
+		if(#FilteredMerchantItems == 0) then return end
+		if(not FilteredMerchantItems[index]) then return end
+
+		return _C_MerchantFrame_GetItemInfo(FilteredMerchantItems[index]);
+	end
+end
+
+-- C_MerchantFrame.IsMerchantItemRefundable is also called with display index
+-- (MerchantFrame.lua:345) and needs the same redirect so refund prompts match
+-- the visible item.
+if C_MerchantFrame and C_MerchantFrame.IsMerchantItemRefundable then
+	local _IsMerchantItemRefundable = C_MerchantFrame.IsMerchantItemRefundable;
+	C_MerchantFrame.IsMerchantItemRefundable = function(index)
+		if(not index) then return end
+		if(not FilteredMerchantItems[index]) then Addon:RefreshFilteredItems(); end
+		if(not FilteredMerchantItems[index]) then return _IsMerchantItemRefundable(index); end
+		return _IsMerchantItemRefundable(FilteredMerchantItems[index]);
+	end
 end
 
 _G.GetMerchantItemLink = function(index)
@@ -612,24 +656,33 @@ function Addon:RefreshFilter(purge_cache)
 	Addon:UpdateMerchantItems();
 end
 
-hooksecurefunc("MerchantFrame_SetFilter", function()
+hooksecurefunc("SetMerchantFilter", function()
 	if(VendorerStackSplitFrame:IsPurchasing()) then
 		VendorerStackSplitFrame:CancelPurchase();
 		Addon:AddMessage("Pending bulk purchase canceled due to filtering change.");
 	end
-	
+
 	Addon:UpdateMerchantItems();
 end);
 
+local function GetMerchantFilterDropdown()
+	return MerchantFrame and MerchantFrame.FilterDropdown or _G.MerchantFrameLootFilter;
+end
+
 hooksecurefunc("MerchantFrame_Update", function()
+	local filterDropdown = GetMerchantFilterDropdown();
 	if(MerchantFrame.selectedTab == 1) then
 		Addon:UpdateExtensionPanel();
-		MerchantFrameLootFilter:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", -35, -28);
+		if filterDropdown then
+			filterDropdown:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", -35, -28);
+		end
 		VendorerToggleExtensionFrameButtons:Show();
 	else
 		MerchantFrame_UpdateBuybackInfo();
 		Addon:HideExtensionPanel();
-		MerchantFrameLootFilter:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", 0, -28);
+		if filterDropdown then
+			filterDropdown:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", 0, -28);
+		end
 		VendorerToggleExtensionFrameButtons:Hide();
 		VendorerStackSplitFrame:Cancel();
 	end
@@ -720,18 +773,8 @@ function VendorerFilteringButton_OnClick(self, button)
 	Addon.db.global.FilteringButtonAlertShown = true;
 end
 
-local QuickFiltersMenuFrame;
 function Addon:OpenQuickFiltersMenu(anchor)
-	if(not QuickFiltersMenuFrame) then
-		QuickFiltersMenuFrame = CreateFrame("Frame", "VendorerQuickFiltersContextMenuFrame", anchor, "UIDropDownMenuTemplate");
-	end
-	
-	QuickFiltersMenuFrame:SetPoint("BOTTOM", anchor, "CENTER", 0, 5);
-	EasyMenu(Addon:GetQuickFiltersMenuData(), QuickFiltersMenuFrame, "cursor", 0, 0, "MENU", 2.5);
-	
-	DropDownList1:ClearAllPoints();
-	DropDownList1:SetPoint("TOPLEFT", anchor, "TOPRIGHT", -10, -10);
-	DropDownList1:SetClampedToScreen(true);
+	EasyMenu(Addon:GetQuickFiltersMenuData(), anchor or UIParent, "cursor", 0, 0, "MENU", 2.5);
 end
 
 function Addon:WrapMultipleWords(words)

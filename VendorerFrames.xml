@@ -236,7 +236,7 @@
 	<Frame name="VendorerToggleExtensionFrameButtons" parent="MerchantFrame">
 		<Size x="60" y="32"/>
 		<Anchors>
-			<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="MerchantFrameLootFilterButton" x="2" y="-1"/>
+			<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="MerchantFrame" x="-220" y="-29"/>
 		</Anchors>
 		<Frames>
 			<Button name="VendorerToggleExtensionFrameButtonContract" id="1" inherits="VendorerToggleExtensionFrameButtonTemplate">
@@ -266,33 +266,37 @@
 		</Frames>
 	</Frame>
 	
-	<GameTooltip name="VendorerHintTooltip" parent="UIParent" inherits="GameTooltipTemplate" hidden="true">
-		<Anchor>
+	<GameTooltip name="VendorerHintTooltip" parent="MerchantFrame" inherits="GameTooltipTemplate" hidden="true">
+		<Anchors>
 			<Anchor point="CENTER"/>
-		</Anchor>
+		</Anchors>
 		<Scripts>
 			<OnShow>
-				self:SetBackdrop{
-					bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
-					edgeFile = [[Interface\AddOns\!Vendorer\media\TooltipBorder]],
-					edgeSize = 16,
-					tile = true, tileSize = 16,
-					insets = {left = 4, right = 4, top = 4, bottom = 4}
-				}
-				self:SetBackdropColor(0, 0, 0, 0.9);
-				self:SetBackdropBorderColor(0, 0, 0, 1);
+				if self.SetBackdrop then
+					self:SetBackdrop{
+						bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
+						edgeFile = [[Interface\AddOns\!Vendorer\media\TooltipBorder]],
+						edgeSize = 16,
+						tile = true, tileSize = 16,
+						insets = {left = 4, right = 4, top = 4, bottom = 4}
+					}
+					self:SetBackdropColor(0, 0, 0, 0.9);
+					self:SetBackdropBorderColor(0, 0, 0, 1);
+				end
 			</OnShow>
 		</Scripts>
 	</GameTooltip>
-	
+
 	<GameTooltip name="VendorerTooltip" inherits="GameTooltipTemplate" hidden="true">
-		<Anchor>
+		<Anchors>
 			<Anchor point="CENTER"/>
-		</Anchor>
+		</Anchors>
 		<Scripts>
 			<OnShow>
-				self:SetBackdropColor(0, 0, 0, 0.95);
-				self:SetBackdropBorderColor(0, 0, 0, 1);
+				if self.SetBackdropColor then
+					self:SetBackdropColor(0, 0, 0, 0.95);
+					self:SetBackdropBorderColor(0, 0, 0, 1);
+				end
 				self:SetScale(0.77);
 			</OnShow>
 		</Scripts>

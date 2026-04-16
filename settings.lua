@@ -76,18 +76,72 @@ function Addon:GetToggleStatusText(status)
 	end
 end
 
-local DropDownMenuFrame;
 function Addon:OpenSettingsMenu(anchor)
-	if(not DropDownMenuFrame) then
-		DropDownMenuFrame = CreateFrame("Frame", "VendorerSettingsContextMenuFrame", anchor, "UIDropDownMenuTemplate");
+	if MenuUtil and MenuUtil.CreateContextMenu then
+		MenuUtil.CreateContextMenu(anchor, function(owner, rootDescription)
+			Addon:PopulateSettingsMenu(rootDescription);
+		end);
+		return;
 	end
-	
-	DropDownMenuFrame:SetPoint("BOTTOM", anchor, "CENTER", 0, 5);
-	EasyMenu(Addon:GetMenuData(), DropDownMenuFrame, "cursor", 0, 0, "MENU", 2.5);
-	
-	DropDownList1:ClearAllPoints();
-	DropDownList1:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", -1, -2);
-	DropDownList1:SetClampedToScreen(true);
+
+	-- Legacy fallback (pre-11.0)
+	if(not Addon._legacyDropDownFrame) then
+		Addon._legacyDropDownFrame = CreateFrame("Frame", "VendorerSettingsContextMenuFrame", anchor, "UIDropDownMenuTemplate");
+	end
+	Addon._legacyDropDownFrame:SetPoint("BOTTOM", anchor, "CENTER", 0, 5);
+	EasyMenu(Addon:GetMenuData(), Addon._legacyDropDownFrame, "cursor", 0, 0, "MENU", 2.5);
+	if DropDownList1 then
+		DropDownList1:ClearAllPoints();
+		DropDownList1:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", -1, -2);
+		DropDownList1:SetClampedToScreen(true);
+	end
+end
+
+function Addon:PopulateSettingsMenu(rootDescription)
+	local self = Addon;
+	local data = Addon:GetMenuData();
+	for _, entry in ipairs(data) do
+		if entry.isTitle then
+			if entry.text and entry.text ~= " " then
+				rootDescription:CreateTitle(entry.text);
+			else
+				rootDescription:CreateDivider();
+			end
+		elseif entry.notCheckable then
+			if entry.func then
+				rootDescription:CreateButton(entry.text or "", entry.func);
+			else
+				rootDescription:CreateTitle(entry.text or "");
+			end
+		else
+			local checkedFn = entry.checked;
+			if type(checkedFn) ~= "function" then
+				local v = checkedFn;
+				checkedFn = function() return v end;
+			end
+			local element = rootDescription:CreateCheckbox(
+				entry.text or "",
+				checkedFn,
+				function()
+					if entry.func then entry.func() end
+					return MenuResponse.Refresh;
+				end
+			);
+			if entry.disabled and element and element.SetEnabled then
+				element:SetEnabled(false);
+			end
+			if (entry.tooltipTitle or entry.tooltipText) and element and element.SetTooltip then
+				element:SetTooltip(function(tooltip, elementDescription)
+					if entry.tooltipTitle then
+						GameTooltip_SetTitle(tooltip, entry.tooltipTitle);
+					end
+					if entry.tooltipText then
+						GameTooltip_AddNormalLine(tooltip, entry.tooltipText, true);
+					end
+				end);
+			end
+		end
+	end
 end
 
 local NEW_FEATURE_ICON = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0:0:0:-1|t";
@@ -189,6 +243,25 @@ function Addon:GetMenuData()
 			keepShownOnClick = 1,
 		},
 		{
+			text = "Default merchant filter to All",
+			func = function()
+				self.db.global.DefaultFilterAll = not self.db.global.DefaultFilterAll;
+				if self.db.global.DefaultFilterAll and MerchantFrame and MerchantFrame:IsShown()
+					and SetMerchantFilter and LE_LOOT_FILTER_ALL then
+					SetMerchantFilter(LE_LOOT_FILTER_ALL);
+					if MerchantFrame.FilterDropdown and MerchantFrame.FilterDropdown.Update then
+						MerchantFrame.FilterDropdown:Update();
+					end
+				end
+			end,
+			checked = function() return self.db.global.DefaultFilterAll; end,
+			isNotRadio = true,
+			tooltipTitle = "Default merchant filter to All",
+			tooltipText = "When a merchant window opens, automatically switch the filter from Class to All so every item is shown.",
+			tooltipOnButton = 1,
+			keepShownOnClick = 1,
+		},
+		{
 			text = "Verbose chat output",
 			func = function()
 				self.db.global.VerboseChat = not self.db.global.VerboseChat;
@@ -208,7 +281,7 @@ function Addon:GetMenuData()
 				self.db.global.UseImprovedStackSplit = not self.db.global.UseImprovedStackSplit;
 				-- Close both split frames just in case
 				VendorerStackSplitFrame:Cancel();
-				StackSplitFrameCancel_Click();
+				if StackSplitFrame and StackSplitFrame:IsShown() then StackSplitFrame:Hide(); end
 			end,
 			checked = function() return self.db.global.UseImprovedStackSplit; end,
 			isNotRadio = true,
@@ -329,7 +402,11 @@ function Addon:GetMenuData()
 end
 
 function VendorerSettingsButton_OnClick(self)
-	if(DropDownList1:IsVisible() and select(2, DropDownList1:GetPoint()) == self) then
+	if MenuUtil and MenuUtil.CreateContextMenu then
+		Addon:OpenSettingsMenu(self);
+		return;
+	end
+	if(DropDownList1 and DropDownList1:IsVisible() and select(2, DropDownList1:GetPoint()) == self) then
 		CloseMenus();
 	else
 		Addon:OpenSettingsMenu(self);

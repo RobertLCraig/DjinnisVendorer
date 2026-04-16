@@ -57,7 +57,12 @@ function VendorerItemListsFrameItems_Update()
 end
 
 function VendorerItemListsFrame_OnLoad(self)
-	SetPortraitToTexture(self.portrait, "Interface\\Icons\\INV_Artifact_tome02");
+	local portrait = self.portrait
+		or (self.PortraitContainer and self.PortraitContainer.portrait)
+		or _G[self:GetName() .. "Portrait"];
+	if portrait and portrait.SetTexture then
+		portrait:SetTexture("Interface\\Icons\\INV_Artifact_tome02");
+	end
 	
 	VendorerItemListsFrame.itemList = {};
 	

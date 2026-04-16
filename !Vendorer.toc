@@ -1,8 +1,8 @@
-## Interface: 90001
+## Interface: 120000
 ## Title: Vendorer
 ## Notes: Improved merchant frames
 ## Author: Sonaza
-## Version: 4.0.1
+## Version: 4.1.0
 ## OptionalDeps: Ace3, CanIMogIt
 ## SavedVariables: VendorerDB
 
@@ -14,6 +14,7 @@ libs\AceDB-3.0\AceDB-3.0.xml
 libs\AceEvent-3.0\AceEvent-3.0.xml
 #@end-no-lib-strip@
 
+compat.lua
 core.lua
 settings.lua
 vendorfilter.lua

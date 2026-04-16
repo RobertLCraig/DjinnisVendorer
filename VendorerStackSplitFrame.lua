@@ -477,11 +477,13 @@ function Addon:GetProperItemCount(item)
 	local _, itemLink = GetItemInfo(item);
 	local itemCount = GetItemCount(itemLink);
 	
-	local numSlots = GetContainerNumSlots(REAGENTBANK_CONTAINER);
-	for slotIndex = 1, numSlots do
-		local _, containerItemCount, _, _, _, _, containerItemLink = GetContainerItemInfo(REAGENTBANK_CONTAINER, slotIndex);
-		if(itemLink and containerItemLink == itemLink) then
-			itemCount = itemCount + containerItemCount;
+	if REAGENTBANK_CONTAINER then
+		local numSlots = GetContainerNumSlots(REAGENTBANK_CONTAINER) or 0;
+		for slotIndex = 1, numSlots do
+			local _, containerItemCount, _, _, _, _, containerItemLink = GetContainerItemInfo(REAGENTBANK_CONTAINER, slotIndex);
+			if(itemLink and containerItemLink == itemLink) then
+				itemCount = itemCount + containerItemCount;
+			end
 		end
 	end
 	

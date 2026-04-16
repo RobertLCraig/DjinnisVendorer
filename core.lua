@@ -303,6 +303,8 @@ function Addon:OnInitialize()
 			DestroyUnsellables = false,
 			
 			ShowTransmogAsterisk = true,
+
+			DefaultFilterAll = false,
 			
 			ExpandTutorialShown = false,
 			FilteringButtonAlertShown = false,
@@ -339,7 +341,7 @@ function Addon:OnEnable()
 	self:RegisterEvent("MERCHANT_SHOW");
 	self:RegisterEvent("MERCHANT_CLOSED");
 	self:RegisterEvent("MERCHANT_UPDATE");
-	self:RegisterEvent("CURSOR_UPDATE");
+	self:RegisterEvent("CURSOR_CHANGED");
 	self:RegisterEvent("UPDATE_INVENTORY_DURABILITY");
 	self:RegisterEvent("TRANSMOG_COLLECTION_UPDATED");
 	
@@ -347,30 +349,59 @@ function Addon:OnEnable()
 	
 	Addon:RestoreSavedSettings();
 
-	hooksecurefunc("PickupContainerItem", function()
+	hooksecurefunc(C_Container, "PickupContainerItem", function()
 		if(not CursorHasItem()) then return end
-		
+
 		Addon:ToggleCursorHighlights(true);
 		Addon:RegisterEvent("ITEM_UNLOCKED");
 	end);
 	
 	Addon:MakeFrameMovable();
-	
+
 	Addon:RegisterTooltip(GameTooltip);
 	Addon:RegisterTooltip(ItemRefTooltip);
+
+	-- Blizzard's MerchantFrame_OnShow calls ResetSetMerchantFilter() which
+	-- clobbers whatever we set in MERCHANT_SHOW. HookScript runs after the
+	-- original OnShow so we can re-apply the Default-to-All preference.
+	if MerchantFrame and MerchantFrame.HookScript then
+		MerchantFrame:HookScript("OnShow", function()
+			if not Addon.db.global.DefaultFilterAll then return end
+			if not (SetMerchantFilter and LE_LOOT_FILTER_ALL) then return end
+			SetMerchantFilter(LE_LOOT_FILTER_ALL);
+			if MerchantFrame.FilterDropdown and MerchantFrame.FilterDropdown.Update then
+				MerchantFrame.FilterDropdown:Update();
+			end
+			MerchantFrame.page = 1;
+			MerchantFrame_Update();
+		end);
+	end
 end
 
 function Addon:RegisterTooltip(tooltip)
+	if TooltipDataProcessor and Enum and Enum.TooltipDataType then
+		-- 10.0.2+ tooltip system
+		if not Addon._tooltipProcessorHooked then
+			Addon._tooltipProcessorHooked = true;
+			TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(self, data)
+				if self ~= GameTooltip and self ~= ItemRefTooltip then return end
+				local _, link = TooltipUtil.GetDisplayedItem(self);
+				if(link and GetItemInfo(link)) then
+					Addon:AddTooltipInfo(self, link);
+				end
+			end);
+		end
+		return;
+	end
+
+	-- Legacy path (pre-10.0.2)
 	local modified = false;
-	
 	tooltip:HookScript('OnTooltipCleared', function(self)
 		modified = false;
 	end)
-
 	tooltip:HookScript('OnTooltipSetItem', function(self)
 		if(modified) then return end
 		modified = true;
-		
 		local name, link = self:GetItem();
 		if(link and GetItemInfo(link)) then
 			Addon:AddTooltipInfo(self, link);
@@ -461,7 +492,7 @@ function Addon:ITEM_UNLOCKED()
 	Addon:UnregisterEvent("ITEM_UNLOCKED");
 end
 
-function Addon:CURSOR_UPDATE()
+function Addon:CURSOR_CHANGED()
 	if(CursorHasItem()) then return end
 	Addon:ToggleCursorHighlights(false);
 end
@@ -482,7 +513,7 @@ function Addon:EnhanceMerchantFrame()
 	
 	MerchantPageText:SetWidth(164);
 	MerchantPageText:ClearAllPoints();
-	MerchantPageText:SetPoint("BOTTOM", MerchantFrame, "BOTTOM", -offset / 2 + 3, 90);
+	MerchantPageText:SetPoint("BOTTOM", MerchantFrame, "BOTTOM", -offset / 2 + 3, 68);
 	MerchantPageText:SetJustifyH("CENTER");
 	
 	MerchantNextPageButton:ClearAllPoints();
@@ -1727,7 +1758,7 @@ function Addon:MERCHANT_SHOW()
 	Addon:ResetFilteredItems();
 	Addon:ResetFilter();
 	Addon.PlayerMoney = GetMoney();
-	
+
 	if (self.db.global.AutoSellJunk) then
 		local npcId = Addon:GetNpcIdFromGUID(UnitGUID("NPC"));
 		if (self.db.global.MerchantAutoSellIgnore[npcId] == nil) then

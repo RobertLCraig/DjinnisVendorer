@@ -219,6 +219,53 @@ StaticPopupDialogs["VENDORER_FILTERING_PERFORMANCE_ALERT"] = {
 	hideOnEscape = 1,
 };
 
+StaticPopupDialogs["VENDORER_EQOL_MERCHANT_CONFLICT"] = {
+	text = "|cffffd200Vendorer / EnhanceQoL conflict|r|n|n"
+	    .. "EnhanceQoL's |cffffffffMerchant|r submodule and Vendorer both customise the merchant window in the same way, and they conflict (phantom item slots float outside the window).|n|n"
+	    .. "Pick one to use. You can disable EnhanceQoL's submodule from here, or close this and switch Vendorer's expansion to None instead.",
+	button1 = "Disable EnhanceQoL Merchant",
+	button2 = "Don't show again",
+	button3 = "Remind me later",
+	OnAccept = function(self)
+		Addon:DisableEnhanceQoLMerchant();
+		Addon.db.global.EQoLMerchantConflictAck = true;
+	end,
+	OnCancel = function(self)
+		Addon.db.global.EQoLMerchantConflictAck = true;
+		Addon:AddMessage("EnhanceQoL Merchant conflict warning suppressed. Use |cffffd200/vendorer eqolwarn|r to re-enable it.");
+	end,
+	OnAlt = function(self)
+		-- Remind me later: leave ack untouched.
+	end,
+	timeout = 0,
+	whileDead = 1,
+	hideOnEscape = 1,
+};
+
+function Addon:IsEnhanceQoLMerchantActive()
+	-- Match the specific submodule's enabled flag, not the addon as a whole.
+	-- See EnhanceQoL/Submodules/Merchant.lua: `MerchantMod.enabled = true` in :Enable().
+	local eqol = _G.EnhanceQoL;
+	return eqol and eqol.Merchant and eqol.Merchant.enabled == true;
+end
+
+function Addon:DisableEnhanceQoLMerchant()
+	local eqol = _G.EnhanceQoL;
+	if(not eqol or not eqol.Merchant) then return end
+
+	-- Persist the setting via EnhanceQoL's saved variables, then disable the
+	-- live submodule. EnhanceQoL itself recommends a reload after disabling
+	-- because anchors aren't reverted in-place.
+	if(eqol.db) then
+		eqol.db.enableExtendedMerchant = false;
+	end
+	if(eqol.Merchant.Disable) then
+		eqol.Merchant:Disable();
+	end
+
+	Addon:AddMessage("Disabled EnhanceQoL's Merchant submodule. A |cffffd200/reload|r is recommended to restore default merchant frame anchors.");
+end
+
 Addon.MerchantWindowOpeningTime = 0;
 Addon.UpdatedFilteringTime = 0;
 function VendorerFramerateWatcher_OnUpdate(self, elapsed)
@@ -305,7 +352,16 @@ function Addon:OnInitialize()
 			ShowTransmogAsterisk = true,
 
 			DefaultFilterAll = false,
-			
+
+			-- "off"     -- clear the merchant search every time (default)
+			-- "session" -- keep search text until /reload or logout
+			-- "account" -- persist search text in SavedVariables
+			SearchPersistence = "off",
+			SavedSearchText = "",
+
+			-- Suppresses the EnhanceQoL Merchant submodule conflict popup.
+			EQoLMerchantConflictAck = false,
+
 			ExpandTutorialShown = false,
 			FilteringButtonAlertShown = false,
 			
@@ -1748,13 +1804,44 @@ function VendorerAutoSmartRepairButton_OnClick(self)
 	Addon.db.global.SmartAutoRepair = self:GetChecked();
 end
 
+Addon.SessionFilterText = "";
+
+function Addon:GetPersistedFilterText()
+	local mode = Addon.db and Addon.db.global and Addon.db.global.SearchPersistence or "off";
+	if(mode == "account") then
+		return Addon.db.global.SavedSearchText or "";
+	elseif(mode == "session") then
+		return Addon.SessionFilterText or "";
+	end
+	return "";
+end
+
+function Addon:SavePersistedFilterText(text)
+	local mode = Addon.db and Addon.db.global and Addon.db.global.SearchPersistence or "off";
+	text = text or "";
+	if(mode == "account") then
+		Addon.db.global.SavedSearchText = text;
+	elseif(mode == "session") then
+		Addon.SessionFilterText = text;
+	end
+end
+
 function Addon:MERCHANT_SHOW()
 	Addon.MerchantSellError = false;
 	Addon.MerchantNpcId = nil;
-	
+
 	Addon:ResetFilteredItems();
-	Addon:ResetFilter();
+	Addon:ResetFilter(Addon:GetPersistedFilterText());
 	Addon.PlayerMoney = GetMoney();
+
+	if(Addon:IsEnhanceQoLMerchantActive()) then
+		if(not Addon.db.global.EQoLMerchantConflictAck) then
+			StaticPopup_Show("VENDORER_EQOL_MERCHANT_CONFLICT");
+		elseif(not Addon.EQoLConflictNoticedThisSession) then
+			Addon.EQoLConflictNoticedThisSession = true;
+			Addon:AddMessage("EnhanceQoL Merchant submodule active (conflict warning suppressed).");
+		end
+	end
 
 	if (self.db.global.AutoSellJunk) then
 		local npcId = Addon:GetNpcIdFromGUID(UnitGUID("NPC"));

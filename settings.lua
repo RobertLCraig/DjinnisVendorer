@@ -50,7 +50,11 @@ function Addon:HandleConsole(params, action, ...)
 		if(Addon.db.global.SmartAutoRepair and not Addon.db.global.AutoRepair) then
 			Addon:AddMessage("|cffffd200Note:|r While auto repair is not enabled, smart auto repair does nothing.");
 		end
-	else	
+	elseif(action == "eqolwarn") then
+		Addon.db.global.EQoLMerchantConflictAck = false;
+		Addon.EQoLConflictNoticedThisSession = nil;
+		Addon:AddMessage("EnhanceQoL Merchant conflict warning re-enabled. The popup will appear next time you open a merchant if the submodule is active.");
+	else
 		Addon:AddMessage("|cffffd200Usage|r");
 		Addon:AddShortMessage("You can access Vendorer slash commands by typing |cffffd200/vendorer|r or |cffffd200/vd|r.");
 		Addon:AddShortMessage("|cffffd200/vendorer|r ignore |cffaaaaaa[item]|r");
@@ -100,47 +104,82 @@ end
 function Addon:PopulateSettingsMenu(rootDescription)
 	local self = Addon;
 	local data = Addon:GetMenuData();
-	for _, entry in ipairs(data) do
-		if entry.isTitle then
-			if entry.text and entry.text ~= " " then
-				rootDescription:CreateTitle(entry.text);
-			else
-				rootDescription:CreateDivider();
-			end
-		elseif entry.notCheckable then
-			if entry.func then
-				rootDescription:CreateButton(entry.text or "", entry.func);
-			else
-				rootDescription:CreateTitle(entry.text or "");
-			end
+	Addon:AddMenuEntries(rootDescription, data);
+end
+
+function Addon:AddMenuEntries(parentDescription, entries)
+	for _, entry in ipairs(entries) do
+		Addon:AddMenuEntry(parentDescription, entry);
+	end
+end
+
+function Addon:AddMenuEntry(parentDescription, entry)
+	if entry.isTitle then
+		if entry.text and entry.text ~= " " then
+			parentDescription:CreateTitle(entry.text);
 		else
-			local checkedFn = entry.checked;
-			if type(checkedFn) ~= "function" then
-				local v = checkedFn;
-				checkedFn = function() return v end;
-			end
-			local element = rootDescription:CreateCheckbox(
-				entry.text or "",
-				checkedFn,
-				function()
-					if entry.func then entry.func() end
-					return MenuResponse.Refresh;
-				end
-			);
-			if entry.disabled and element and element.SetEnabled then
-				element:SetEnabled(false);
-			end
-			if (entry.tooltipTitle or entry.tooltipText) and element and element.SetTooltip then
-				element:SetTooltip(function(tooltip, elementDescription)
-					if entry.tooltipTitle then
-						GameTooltip_SetTitle(tooltip, entry.tooltipTitle);
-					end
-					if entry.tooltipText then
-						GameTooltip_AddNormalLine(tooltip, entry.tooltipText, true);
-					end
-				end);
-			end
+			parentDescription:CreateDivider();
 		end
+		return;
+	end
+
+	if entry.hasArrow and entry.menuList then
+		local subDesc = parentDescription:CreateButton(entry.text or "");
+		Addon:AddMenuEntries(subDesc, entry.menuList);
+		return;
+	end
+
+	if entry.isRadio then
+		local checkedFn = entry.checked;
+		if type(checkedFn) ~= "function" then
+			local v = checkedFn;
+			checkedFn = function() return v end;
+		end
+		parentDescription:CreateRadio(
+			entry.text or "",
+			checkedFn,
+			function()
+				if entry.func then entry.func() end
+				return MenuResponse.Refresh;
+			end
+		);
+		return;
+	end
+
+	if entry.notCheckable then
+		if entry.func then
+			parentDescription:CreateButton(entry.text or "", entry.func);
+		else
+			parentDescription:CreateTitle(entry.text or "");
+		end
+		return;
+	end
+
+	local checkedFn = entry.checked;
+	if type(checkedFn) ~= "function" then
+		local v = checkedFn;
+		checkedFn = function() return v end;
+	end
+	local element = parentDescription:CreateCheckbox(
+		entry.text or "",
+		checkedFn,
+		function()
+			if entry.func then entry.func() end
+			return MenuResponse.Refresh;
+		end
+	);
+	if entry.disabled and element and element.SetEnabled then
+		element:SetEnabled(false);
+	end
+	if (entry.tooltipTitle or entry.tooltipText) and element and element.SetTooltip then
+		element:SetTooltip(function(tooltip, elementDescription)
+			if entry.tooltipTitle then
+				GameTooltip_SetTitle(tooltip, entry.tooltipTitle);
+			end
+			if entry.tooltipText then
+				GameTooltip_AddNormalLine(tooltip, entry.tooltipText, true);
+			end
+		end);
 	end
 end
 
@@ -260,6 +299,47 @@ function Addon:GetMenuData()
 			tooltipText = "When a merchant window opens, automatically switch the filter from Class to All so every item is shown.",
 			tooltipOnButton = 1,
 			keepShownOnClick = 1,
+		},
+		{
+			text = "Remember search text",
+			notCheckable = true,
+			hasArrow = true,
+			menuList = {
+				{
+					text = "Don't remember",
+					isRadio = true,
+					checked = function() return self.db.global.SearchPersistence == "off"; end,
+					func = function()
+						self.db.global.SearchPersistence = "off";
+						self.db.global.SavedSearchText = "";
+						Addon.SessionFilterText = "";
+					end,
+				},
+				{
+					text = "Until reload",
+					isRadio = true,
+					checked = function() return self.db.global.SearchPersistence == "session"; end,
+					func = function()
+						self.db.global.SearchPersistence = "session";
+						self.db.global.SavedSearchText = "";
+						-- seed session from current edit box so it sticks immediately
+						if VendorerFilterEditBox then
+							Addon.SessionFilterText = string.trim(string.lower(VendorerFilterEditBox:GetText() or ""));
+						end
+					end,
+				},
+				{
+					text = "Across sessions",
+					isRadio = true,
+					checked = function() return self.db.global.SearchPersistence == "account"; end,
+					func = function()
+						self.db.global.SearchPersistence = "account";
+						if VendorerFilterEditBox then
+							self.db.global.SavedSearchText = string.trim(string.lower(VendorerFilterEditBox:GetText() or ""));
+						end
+					end,
+				},
+			},
 		},
 		{
 			text = "Verbose chat output",

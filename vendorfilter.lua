@@ -657,11 +657,13 @@ function Addon:RefreshFilter(purge_cache)
 	
 	local oldfilter = Addon.FilterText;
 	Addon.FilterText = string.trim(string.lower(VendorerFilterEditBox:GetText()));
-	
+
 	if(Addon.FilterText ~= "" or oldfilter ~= "") then
 		Addon.UpdatedFilteringTime = GetTime();
 	end
-	
+
+	Addon:SavePersistedFilterText(Addon.FilterText);
+
 	MerchantFrame.page = 1;
 	Addon:UpdateMerchantItems();
 end

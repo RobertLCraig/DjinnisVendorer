@@ -150,16 +150,7 @@
 	<Frame name="VendorerMerchantItem10Rarity" parent="MerchantItem10ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
 	<Frame name="VendorerMerchantItem11Rarity" parent="MerchantItem11ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
 	<Frame name="VendorerMerchantItem12Rarity" parent="MerchantItem12ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-		
-	<Frame name="VendorerMerchantItem13Rarity" parent="MerchantItem13ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem14Rarity" parent="MerchantItem14ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem15Rarity" parent="MerchantItem15ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem16Rarity" parent="MerchantItem16ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem17Rarity" parent="MerchantItem17ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem18Rarity" parent="MerchantItem18ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem19Rarity" parent="MerchantItem19ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem20Rarity" parent="MerchantItem20ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	
+
 	<Frame name="VendorerMerchantBuyBackItemRarity" parent="MerchantBuyBackItemItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
 	
 	<Button name="VendorerToggleExtensionFrameButtonTemplate" virtual="true">

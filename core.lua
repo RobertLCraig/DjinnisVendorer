@@ -590,7 +590,10 @@ function Addon:ShowExtensionPanel()
 	
 	if(extension == VENDORER_EXTENSION_WIDE) then
 		MerchantFrame:SetWidth(834);
-		Addon:SetMerchantItemsPerPage(20);
+		-- Midnight (12.0) only ships 12 static MerchantItem frames. Going past
+		-- 12 makes Blizzard's own MerchantFrame_UpdateMerchantInfo crash on a
+		-- nil _G["MerchantItem"..i] lookup.
+		Addon:SetMerchantItemsPerPage(12);
 
 		VendorerMerchantFrameExtension:Show();
 		VendorerMerchantFrameExtensionNarrow:Hide();
@@ -1826,6 +1829,20 @@ end
 hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function() Addon:UpdateMerchantInfo() end);
 hooksecurefunc("MerchantFrame_UpdateBuybackInfo", function() Addon:UpdateBuybackInfo() end);
 
+-- Midnight (12.0) keeps pooled MerchantItem frames alive past the per-page
+-- limit. They leak out of the vendor window wherever they were last parked.
+-- Hide any slot above the active page size whenever we update.
+function Addon:HideExtraMerchantSlots(startIndex)
+	local i = startIndex;
+	local frame = _G["MerchantItem"..i];
+	while(frame) do
+		frame:Hide();
+		i = i + 1;
+		frame = _G["MerchantItem"..i];
+		if(i > 60) then break end
+	end
+end
+
 function Addon:IsCurrencyItem(itemlink)
 	return strmatch(itemlink, "Hcurrency") ~= nil;
 end
@@ -1859,6 +1876,8 @@ function Addon:UpdateMerchantInfo()
 		MerchantItem12:Hide();
 	end
 	
+	Addon:HideExtraMerchantSlots(MERCHANT_ITEMS_PER_PAGE + 1);
+
 	if(numMerchantItems > 0) then
 		for i=1, MERCHANT_ITEMS_PER_PAGE, 1 do
 			local index = ((MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE) + i;
@@ -2005,43 +2024,46 @@ function Addon:UpdateMerchantInfo()
 end
 
 function Addon:UpdateBuybackInfo()
+	-- Wide extension parks MerchantItem11/12 next to MerchantItem2 for the
+	-- merchant grid. Pull them back into the buyback panel so they don't
+	-- float outside the frame on the buyback tab.
 	MerchantItem11:ClearAllPoints();
 	MerchantItem11:SetPoint("TOPLEFT", MerchantItem9, "BOTTOMLEFT", 0, -15);
-	
-	local numBuybackItems = GetNumBuybackItems();
-	local itemButton, buybackButton;
-	local buybackName, buybackTexture, buybackPrice, buybackQuantity, buybackNumAvailable, buybackIsUsable;
+	MerchantItem12:ClearAllPoints();
+	MerchantItem12:SetPoint("TOPLEFT", MerchantItem11, "TOPRIGHT", 12, 0);
+
 	for i=1, BUYBACK_ITEMS_PER_PAGE do
 		local itemButton = _G["MerchantItem"..i.."ItemButton"];
-		
-		local rarityBorder = _G["VendorerMerchantItem"..i.."Rarity"];
-		if(rarityBorder) then
-			rarityBorder:Hide();
-			rarityBorder.transmogrifyAsterisk:Hide();
-		end
-		
-		if(not itemButton.rarityBorder) then
-			itemButton.rarityBorder = rarityBorder;
-			
-			itemButton:HookScript("OnEnter", function(self)
-				self.rarityBorder.highlight:Show();
-			end)
-			
-			itemButton:HookScript("OnLeave", function(self)
-				self.rarityBorder.highlight:Hide();
-			end);
-		end
-		
-		local link = GetBuybackItemInfo(i);
-		if(link) then
-			local _, _, rarity = GetItemInfo(link);
-			if(rarity and rarity >= 1) then
-				local r, g, b = GetItemQualityColor(rarity);
-				local a = 0.9;
-				if(rarity == 1) then a = 0.75 end
-				rarityBorder.border:SetVertexColor(r, g, b, a);
-				rarityBorder.highlight:SetVertexColor(r, g, b);
-				rarityBorder:Show();
+		if(itemButton) then
+			local rarityBorder = _G["VendorerMerchantItem"..i.."Rarity"];
+			if(rarityBorder) then
+				rarityBorder:Hide();
+				rarityBorder.transmogrifyAsterisk:Hide();
+			end
+
+			if(not itemButton.rarityBorder) then
+				itemButton.rarityBorder = rarityBorder;
+
+				itemButton:HookScript("OnEnter", function(self)
+					self.rarityBorder.highlight:Show();
+				end)
+
+				itemButton:HookScript("OnLeave", function(self)
+					self.rarityBorder.highlight:Hide();
+				end);
+			end
+
+			local link = GetBuybackItemInfo(i);
+			if(link and rarityBorder) then
+				local _, _, rarity = GetItemInfo(link);
+				if(rarity and rarity >= 1) then
+					local r, g, b = GetItemQualityColor(rarity);
+					local a = 0.9;
+					if(rarity == 1) then a = 0.75 end
+					rarityBorder.border:SetVertexColor(r, g, b, a);
+					rarityBorder.highlight:SetVertexColor(r, g, b);
+					rarityBorder:Show();
+				end
 			end
 		end
 	end

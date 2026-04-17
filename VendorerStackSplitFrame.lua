@@ -32,6 +32,19 @@ VendorerStackSplitMixin = {
 	split = 1,
 };
 
+-- VendorerStackSplitFrame uses enableKeyboard + OnKeyDown to capture digits /
+-- arrows without propagation. Release keyboard while a confirmation popup is
+-- up so DialogKey (and the popup's own ESC/hideOnEscape handling) can see keys.
+local function OnConfirmPopupShow()
+	VendorerStackSplitFrame.okayButton:Disable();
+	VendorerStackSplitFrame:EnableKeyboard(false);
+end
+
+local function OnConfirmPopupHide()
+	VendorerStackSplitFrame.okayButton:Enable();
+	VendorerStackSplitFrame:EnableKeyboard(true);
+end
+
 StaticPopupDialogs["VENDORER_CONFIRM_PURCHASE_TOKEN_ITEM"] = {
 	text = CONFIRM_PURCHASE_TOKEN_ITEM,
 	button1 = YES,
@@ -42,12 +55,8 @@ StaticPopupDialogs["VENDORER_CONFIRM_PURCHASE_TOKEN_ITEM"] = {
 	OnCancel = function()
 		VendorerStackSplitFrame.waiting:Hide();
 	end,
-	OnShow = function()
-		VendorerStackSplitFrame.okayButton:Disable();
-	end,
-	OnHide = function()
-		VendorerStackSplitFrame.okayButton:Enable();
-	end,
+	OnShow = OnConfirmPopupShow,
+	OnHide = OnConfirmPopupHide,
 	timeout = 0,
 	hideOnEscape = 1,
 	hasItemFrame = 1,
@@ -63,12 +72,8 @@ StaticPopupDialogs["VENDORER_CONFIRM_PURCHASE_NONREFUNDABLE_ITEM"] = {
 	OnCancel = function()
 		VendorerStackSplitFrame.waiting:Hide();
 	end,
-	OnShow = function()
-		VendorerStackSplitFrame.okayButton:Disable();
-	end,
-	OnHide = function()
-		VendorerStackSplitFrame.okayButton:Enable();
-	end,
+	OnShow = OnConfirmPopupShow,
+	OnHide = OnConfirmPopupHide,
 	timeout = 0,
 	hideOnEscape = 1,
 	hasItemFrame = 1,
@@ -86,11 +91,9 @@ StaticPopupDialogs["VENDORER_CONFIRM_HIGH_COST_ITEM"] = {
 	end,
 	OnShow = function(self)
 		MoneyFrame_Update(self.moneyFrame, MerchantFrame.price * MerchantFrame.count);
-		VendorerStackSplitFrame.okayButton:Disable();
+		OnConfirmPopupShow();
 	end,
-	OnHide = function()
-		VendorerStackSplitFrame.okayButton:Enable();
-	end,
+	OnHide = OnConfirmPopupHide,
 	timeout = 0,
 	hideOnEscape = 1,
 	hasMoneyFrame = 1,
@@ -99,13 +102,21 @@ StaticPopupDialogs["VENDORER_CONFIRM_HIGH_COST_ITEM"] = {
 
 function VendorerStackSplitMixin:OnHide()
 	self.itemButton.hasStackSplit = 0;
-	
+
 	if(self.dialog and self.dialog:IsVisible()) then
 		self.dialog:Hide();
 	end
 	self.dialog = nil;
-	
+
 	self.waiting:Hide();
+
+	-- Defensive: clear purchasing state so the next Open() isn't dead-in-the-water
+	-- if a prior purchase never received its completion events (merchant closed
+	-- mid-buy, API changed, etc).
+	self.purchasing = false;
+	self.purchaseInfo = nil;
+	self:UnregisterEvent("BAG_UPDATE_DELAYED");
+	self:UnregisterEvent("CURRENCY_DISPLAY_UPDATE");
 end
 
 function VendorerStackSplitMixin:Decrement()
@@ -491,8 +502,10 @@ function Addon:GetProperItemCount(item)
 end
 
 function VendorerStackSplitMixin:Open(merchantItemIndex, parent, anchor)
-	if(self.purchasing) then return end
-	
+	-- Hard reset: if a prior purchase left us in a zombie state, don't refuse to open.
+	self.purchasing = false;
+	self.purchaseInfo = nil;
+
 	self:SetScript("OnChar", self.OnChar);
 	self:SetScript("OnKeyDown", self.OnKeyDown);
 	
@@ -538,8 +551,7 @@ function VendorerStackSplitMixin:Open(merchantItemIndex, parent, anchor)
 	self.itemButton     = parent;
 	self.canAfford      = canAfford;
 	self.maxStack       = maxStack;
-	self.canFitStacks   = Addon:GetFreeBagSlotsForItem(itemLink);
-	self.canFitItems    = self.canFitStacks * maxStack;
+	self.canFitItems, self.canFitStacks = Addon:GetBagSpaceForItem(itemLink, maxStack);
 	self.numAvailable   = numAvailable;
 	self.maxPurchase    = math.min(canAfford, self.canFitItems, numAvailable, self.numCanBuyMore, MAX_STACK_SIZE);
 	self.maxPurchase    = self.maxPurchase - (self.maxPurchase % self.minSplit);
@@ -623,25 +635,48 @@ function VendorerStackSplitMixin:OnKeyDown(key)
 	self:Update();
 end
 
-function Addon:GetFreeBagSlotsForItem(item)
-	if(not item) then return end
-	
+function Addon:GetBagSpaceForItem(item, stackSize)
+	if(not item) then return 0, 0 end
+
 	local _, itemLink = GetItemInfo(item);
-	local itemType = GetItemFamily(itemLink);
-	
-	local freeSlots = GetContainerNumFreeSlots(0);
-	
-	for bagID = 1, NUM_BAG_SLOTS do
-		local bagItemLink = GetInventoryItemLink("player", 19 + bagID);
-		if(bagItemLink) then
-			local bagType = GetItemFamily(bagItemLink);
-			if(not bagType or bagType == 0 or bagType == itemType or bit.band(itemType, bagType) == bagSubType) then
-				freeSlots = freeSlots + GetContainerNumFreeSlots(bagID);
+	if(not itemLink) then return 0, 0 end
+
+	stackSize = stackSize or 1;
+	if(stackSize < 1) then stackSize = 1; end
+
+	local itemID = tonumber(itemLink:match("item:(%d+)"));
+
+	local getFamily = GetItemFamily or (C_Item and C_Item.GetItemFamily);
+	local itemFamily = (getFamily and getFamily(itemLink)) or 0;
+
+	local totalFit = 0;
+	local emptySlots = 0;
+	local lastBag = (NUM_BAG_SLOTS or 4);
+	for bagID = 0, lastBag do
+		local bagFree, bagFamily = GetContainerNumFreeSlots(bagID);
+		bagFree = bagFree or 0;
+		bagFamily = bagFamily or 0;
+
+		-- Bag accepts the item if: it's a general-purpose bag (family 0),
+		-- exactly matches the item's family, or shares a family bit with it.
+		if(bagFamily == 0 or bagFamily == itemFamily or bit.band(itemFamily, bagFamily) > 0) then
+			emptySlots = emptySlots + bagFree;
+			totalFit = totalFit + (bagFree * stackSize);
+
+			-- Top-off room: count unused capacity in partial stacks of the same item.
+			if(itemID and stackSize > 1) then
+				local numSlots = GetContainerNumSlots(bagID) or 0;
+				for slotIndex = 1, numSlots do
+					local _, stackCount, _, _, _, _, _, _, _, slotItemID = GetContainerItemInfo(bagID, slotIndex);
+					if(slotItemID == itemID and stackCount and stackCount < stackSize) then
+						totalFit = totalFit + (stackSize - stackCount);
+					end
+				end
 			end
 		end
 	end
-	
-	return freeSlots;
+
+	return totalFit, emptySlots;
 end
 
 function Addon:GetCurrencyInfo(currencyItemLink, currencyName)

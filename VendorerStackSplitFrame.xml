@@ -2,7 +2,7 @@
 ..\FrameXML\UI.xsd">
 	<Script file="VendorerStackSplitFrame.lua"/>
 	
-	<Font name="VendorerNumberFont" font="Interface\AddOns\!Vendorer\media\DORISPP.TTF" virtual="true">
+	<Font name="VendorerNumberFont" font="Interface\AddOns\Vendorer\media\DORISPP.TTF" virtual="true">
 		<Shadow>
 			<Offset>
 				<AbsDimension x="0" y="-1"/>
@@ -23,7 +23,7 @@
 		</Anchors>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture parentKey="background" file="Interface\AddOns\!Vendorer\media\StackSplit" setAllPoints="true">
+				<Texture parentKey="background" file="Interface\AddOns\Vendorer\media\StackSplit" setAllPoints="true">
 					<TexCoords left="0.01171875" right="0.66015625" top="0" bottom="1"/>
 				</Texture>
 			</Layer>
@@ -124,7 +124,7 @@
 			<Frame name="$parentPleaseWait" parentKey="waiting" setAllPoints="true" enableMouse="true" hidden="true">
 				<Layers>
 					<Layer level="BACKGROUND">
-						<Texture file="Interface\AddOns\!Vendorer\media\StackSplit" setAllPoints="true">
+						<Texture file="Interface\AddOns\Vendorer\media\StackSplit" setAllPoints="true">
 							<TexCoords left="0.01171875" right="0.66015625" top="0" bottom="1"/>
 							<Color r="0" g="0" b="0" a="0.5"/>
 						</Texture>

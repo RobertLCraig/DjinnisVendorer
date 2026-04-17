@@ -195,6 +195,14 @@ hooksecurefunc("MerchantFrame_UpdateRepairButtons", function() Addon:UpdateRepai
 function Addon:UpdateRepairButtons()
 	if(CanMerchantRepair() and CanGuildBankRepair()) then
 		MerchantRepairAllButton:SetPoint("BOTTOMRIGHT", MerchantFrame, "BOTTOMLEFT", 83, 29)
+
+		-- Midnight (12.0) added MerchantSellAllJunkButton to the right of the
+		-- repair trio. Re-anchor to whichever rightmost button actually exists
+		-- so we never sit on top of a Blizzard button.
+		local anchorTo = MerchantSellAllJunkButton or MerchantGuildBankRepairButton
+		VendorerSmartRepairButton:ClearAllPoints()
+		VendorerSmartRepairButton:SetPoint("LEFT", anchorTo, "RIGHT", 5, 0)
+
 		VendorerSmartRepairButton:Show();
 		
 		local repairAllCost, canRepair = GetRepairAllCost();

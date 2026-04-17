@@ -1,9 +1,21 @@
-package-as: "!Vendorer"
+package-as: Vendorer
 enable-nolib-creation: no
 
-# move-folders:
-#   Vendorer: "!Vendorer"
-  
+ignore:
+  - .git
+  - .gitignore
+  - .github
+  - .claude
+  - CLAUDE.md
+  - CHANGELOG.md
+  - README.md
+  - LICENSE
+  - deploy.ps1
+  - release.ps1
+  - RELEASE_NOTES.md
+  - pkgmeta.yaml
+  - releases
+
 manual-changelog:
   filename: CHANGELOG.md
   markup-type: markdown

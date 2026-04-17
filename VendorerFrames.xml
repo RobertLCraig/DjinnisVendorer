@@ -3,7 +3,7 @@
 
 	<FontFamily name="VendorerBaseFontFamily" virtual="true">
 		<Member alphabet="roman">
-			<Font font="Interface\AddOns\!Vendorer\media\DORISPP.TTF" height="10" outline="NORMAL"/>
+			<Font font="Interface\AddOns\Vendorer\media\DORISPP.TTF" height="10" outline="NORMAL"/>
 		</Member>
 		<Member alphabet="korean">
 			<Font font="Fonts\2002.TTF" height="10" outline="NORMAL"/>
@@ -45,7 +45,7 @@
 		<Color r="1" g="1" b="1"/>
 	</Font>
 	
-	<Font name="VendorerBigFont" font="Interface\AddOns\!Vendorer\media\DORISPP.TTF" outline="NORMAL" virtual="true">
+	<Font name="VendorerBigFont" font="Interface\AddOns\Vendorer\media\DORISPP.TTF" outline="NORMAL" virtual="true">
 		<Shadow>
 			<Offset>
 				<AbsDimension x="0" y="-2"/>
@@ -58,7 +58,7 @@
 		<Color r="1" g="1" b="1"/>
 	</Font>
 	
-	<Font name="VendorerCheckButtonFont" font="Interface\AddOns\!Vendorer\media\DORISPP.TTF" outline="NORMAL" virtual="true">
+	<Font name="VendorerCheckButtonFont" font="Interface\AddOns\Vendorer\media\DORISPP.TTF" outline="NORMAL" virtual="true">
 		<Shadow>
 			<Offset>
 				<AbsDimension x="0" y="-1"/>
@@ -90,14 +90,14 @@
 		</Anchors>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture name="$parentInset" file="Interface\AddOns\!Vendorer\media\Border">
+				<Texture name="$parentInset" file="Interface\AddOns\Vendorer\media\Border">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="1" y="-1"/>
 						<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parent" x="-1" y="1"/>
 					</Anchors>
 					<Color r="0" g="0" b="0" a="0.5"/>
 				</Texture>
-				<Texture name="$parentShadow" file="Interface\AddOns\!Vendorer\media\Border">
+				<Texture name="$parentShadow" file="Interface\AddOns\Vendorer\media\Border">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="-2" y="2"/>
 						<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parent" x="2" y="-2"/>
@@ -106,12 +106,12 @@
 				</Texture>
 			</Layer>
 			<Layer level="ARTWORK">
-				<Texture name="$parentBorder" parentKey="border" file="Interface\AddOns\!Vendorer\media\Border" setAllPoints="true">
+				<Texture name="$parentBorder" parentKey="border" file="Interface\AddOns\Vendorer\media\Border" setAllPoints="true">
 					<Color r="1" g="1" b="1"/>
 				</Texture>
 			</Layer>
 			<Layer level="OVERLAY">
-				<Texture name="$parentBorderHighlight" parentKey="highlight" file="Interface\AddOns\!Vendorer\media\Border" setAllPoints="true" alphaMode="ADD" hidden="true">
+				<Texture name="$parentBorderHighlight" parentKey="highlight" file="Interface\AddOns\Vendorer\media\Border" setAllPoints="true" alphaMode="ADD" hidden="true">
 					<Color r="1" g="1" b="1" a="0.85"/>
 				</Texture>
 			</Layer>
@@ -124,11 +124,11 @@
 				</Anchors>
 				<Layers>
 					<Layer level="OVERLAY">
-						<Texture parentKey="iconSelf" file="Interface\AddOns\!Vendorer\media\TransmogrifyAsterisk" setAllPoints="true" hidden="true">
+						<Texture parentKey="iconSelf" file="Interface\AddOns\Vendorer\media\TransmogrifyAsterisk" setAllPoints="true" hidden="true">
 							<Color r="1" g="1" b="1"/>
 							<TexCoords left="0" right="0.5" top="0" bottom="1"/>
 						</Texture>
-						<Texture parentKey="iconOther" file="Interface\AddOns\!Vendorer\media\TransmogrifyAsterisk" setAllPoints="true" hidden="true">
+						<Texture parentKey="iconOther" file="Interface\AddOns\Vendorer\media\TransmogrifyAsterisk" setAllPoints="true" hidden="true">
 							<Color r="1" g="1" b="1"/>
 							<TexCoords left="0.5" right="1" top="0" bottom="1"/>
 						</Texture>
@@ -138,55 +138,6 @@
 		</Frames>
 	</Frame>
 	
-	<Frame name="VendorerExtraMerchantItems" parent="MerchantFrame">
-		<Size x="320" y="240"/>
-		<Anchors>
-			<Anchor point="TOPLEFT" relativeTo="MerchantItem11" relativePoint="BOTTOMLEFT" x="0" y="-8"/>
-		</Anchors>
-		<Frames>
-			<Frame name="MerchantItem13" inherits="MerchantItemTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
-				</Anchors>
-			</Frame>
-			<Frame name="MerchantItem14" inherits="MerchantItemTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="MerchantItem13" relativePoint="TOPRIGHT" x="12" y="0"/>
-				</Anchors>
-			</Frame>
-			<Frame name="MerchantItem15" inherits="MerchantItemTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="MerchantItem13" relativePoint="BOTTOMLEFT" x="0" y="-8"/>
-				</Anchors>
-			</Frame>
-			<Frame name="MerchantItem16" inherits="MerchantItemTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="MerchantItem15" relativePoint="TOPRIGHT" x="12" y="0"/>
-				</Anchors>
-			</Frame>
-			<Frame name="MerchantItem17" inherits="MerchantItemTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="MerchantItem15" relativePoint="BOTTOMLEFT" x="0" y="-8"/>
-				</Anchors>
-			</Frame>
-			<Frame name="MerchantItem18" inherits="MerchantItemTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="MerchantItem17" relativePoint="TOPRIGHT" x="12" y="0"/>
-				</Anchors>
-			</Frame>
-			<Frame name="MerchantItem19" inherits="MerchantItemTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="MerchantItem17" relativePoint="BOTTOMLEFT" x="0" y="-8"/>
-				</Anchors>
-			</Frame>
-			<Frame name="MerchantItem20" inherits="MerchantItemTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="MerchantItem19" relativePoint="TOPRIGHT" x="12" y="0"/>
-				</Anchors>
-			</Frame>
-		</Frames>
-	</Frame>
-		
 	<Frame name="VendorerMerchantItem1Rarity" parent="MerchantItem1ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
 	<Frame name="VendorerMerchantItem2Rarity" parent="MerchantItem2ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
 	<Frame name="VendorerMerchantItem3Rarity" parent="MerchantItem3ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
@@ -275,7 +226,7 @@
 				if self.SetBackdrop then
 					self:SetBackdrop{
 						bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
-						edgeFile = [[Interface\AddOns\!Vendorer\media\TooltipBorder]],
+						edgeFile = [[Interface\AddOns\Vendorer\media\TooltipBorder]],
 						edgeSize = 16,
 						tile = true, tileSize = 16,
 						insets = {left = 4, right = 4, top = 4, bottom = 4}
@@ -315,7 +266,7 @@
 				</Anchors>
 				<Layers>
 					<Layer level="BACKGROUND">
-						<Texture file="Interface/AddOns/!Vendorer/media/MerchantFrameExtensionNarrow">
+						<Texture file="Interface/AddOns/Vendorer/media/MerchantFrameExtensionNarrow">
 							<TexCoords left="0" right="0.8203125" top="0" bottom="0.861328125"/>
 						</Texture>
 					</Layer>
@@ -328,7 +279,7 @@
 				</Anchors>
 				<Layers>
 					<Layer level="BACKGROUND">
-						<Texture file="Interface/AddOns/!Vendorer/media/MerchantFrameExtensionWide">
+						<Texture file="Interface/AddOns/Vendorer/media/MerchantFrameExtensionWide">
 							<TexCoords left="0" right="0.6162109375" top="0" bottom="0.861328125"/>
 						</Texture>
 					</Layer>
@@ -361,7 +312,7 @@
 		</HitRectInsets>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture parentKey="icon" file="Interface\AddOns\!Vendorer\media\FilteringButton">
+				<Texture parentKey="icon" file="Interface\AddOns\Vendorer\media\FilteringButton">
 					<Size x="46" y="46"/>
 					<Anchors>
 						<Anchor point="CENTER"/>

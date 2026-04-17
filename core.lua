@@ -591,18 +591,14 @@ function Addon:ShowExtensionPanel()
 	if(extension == VENDORER_EXTENSION_WIDE) then
 		MerchantFrame:SetWidth(834);
 		Addon:SetMerchantItemsPerPage(20);
-		
-		VendorerExtraMerchantItems:Show();
-		
+
 		VendorerMerchantFrameExtension:Show();
 		VendorerMerchantFrameExtensionNarrow:Hide();
 		VendorerMerchantFrameExtensionWide:Show();
 	elseif(extension == VENDORER_EXTENSION_NARROW) then
 		MerchantFrame:SetWidth(500);
 		Addon:SetMerchantItemsPerPage(10);
-	
-		VendorerExtraMerchantItems:Hide();
-		
+
 		VendorerMerchantFrameExtension:Show();
 		VendorerMerchantFrameExtensionNarrow:Show();
 		VendorerMerchantFrameExtensionWide:Hide();
@@ -614,11 +610,9 @@ end
 function Addon:HideExtensionPanel()
 	MerchantFrame:SetWidth(336);
 	Addon:SetMerchantItemsPerPage(10);
-	
-	VendorerExtraMerchantItems:Hide();
-	
+
 	VendorerMerchantFrameExtension:Hide();
-	
+
 	VendorerExtensionFrameItems:Hide();
 end
 
@@ -1974,9 +1968,9 @@ function Addon:UpdateMerchantInfo()
 			end
 		end
 	end
-	
+
 	-------------------------------
-	
+
 	local buyBackItemButton = _G["MerchantBuyBackItemItemButton"];
 	local buyBackRarityBorder = _G["VendorerMerchantBuyBackItemRarity"];
 	if(buyBackRarityBorder) then

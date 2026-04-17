@@ -1,7 +1,7 @@
 ## Interface: 120000
 ## Title: Vendorer
 ## Notes: Improved merchant frames
-## Author: Sonaza
+## Author: Sonaza + Djinni
 ## Version: 4.1.0
 ## OptionalDeps: Ace3, CanIMogIt
 ## SavedVariables: VendorerDB

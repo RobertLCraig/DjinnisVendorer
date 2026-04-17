@@ -188,6 +188,16 @@ _G.GetMerchantNumItems = function()
 	return #FilteredMerchantItems;
 end
 
+-- Midnight's MerchantFrame_UpdateMerchantInfo calls C_MerchantFrame.GetNumItems()
+-- directly instead of the _G global, bypassing our override above. Wrap it so
+-- Blizzard only shows as many buttons as the filter reports.
+if C_MerchantFrame and C_MerchantFrame.GetNumItems then
+	C_MerchantFrame.GetNumItems = function()
+		if(not FilteredMerchantItems or #FilteredMerchantItems == 0) then Addon:RefreshFilteredItems(); end
+		return #FilteredMerchantItems;
+	end
+end
+
 local GOLD_PRICE_PATTERN = "(%d+)g";
 local SILVER_PRICE_PATTERN = "(%d?%d)s";
 local COPPER_PRICE_PATTERN = "(%d?%d)c";

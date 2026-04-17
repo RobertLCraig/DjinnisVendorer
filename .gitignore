@@ -1,5 +1,7 @@
 /misc
 *.sublime-*
+.claude/
+/releases/
 
 # Windows image file caches
 Thumbs.db

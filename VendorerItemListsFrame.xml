@@ -148,7 +148,7 @@
 			<Button name="VendorerItemListsDragReceiver" frameStrata="HIGH" enableMouse="true" setAllPoints="true" hidden="true">
 				<Layers>
 					<Layer level="BACKGROUND">
-						<Texture file="Interface\AddOns\!Vendorer\media\ShadowBlob" setAllPoints="true">
+						<Texture file="Interface\AddOns\Vendorer\media\ShadowBlob" setAllPoints="true">
 							<Color r="1" g="1" b="1" a="0.65"/>
 						</Texture>
 					</Layer>

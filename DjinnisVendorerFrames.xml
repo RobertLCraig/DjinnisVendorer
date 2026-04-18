@@ -1,9 +1,9 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
 
-	<FontFamily name="VendorerBaseFontFamily" virtual="true">
+	<FontFamily name="DjinnisVendorerBaseFontFamily" virtual="true">
 		<Member alphabet="roman">
-			<Font font="Interface\AddOns\Vendorer\media\DORISPP.TTF" height="10" outline="NORMAL"/>
+			<Font font="Interface\AddOns\DjinnisVendorer\media\DORISPP.TTF" height="10" outline="NORMAL"/>
 		</Member>
 		<Member alphabet="korean">
 			<Font font="Fonts\2002.TTF" height="10" outline="NORMAL"/>
@@ -19,7 +19,7 @@
 		</Member>
 	</FontFamily>
 
-	<Font name="VendorerButtonFontHighlight" inherits="VendorerBaseFontFamily" outline="NORMAL" virtual="true">
+	<Font name="DjinnisVendorerButtonFontHighlight" inherits="DjinnisVendorerBaseFontFamily" outline="NORMAL" virtual="true">
 		<Shadow>
 			<Offset>
 				<AbsDimension x="0" y="-1"/>
@@ -32,7 +32,7 @@
 		<Color r="1" g="0.8" b="0.3"/>
 	</Font>
 	
-	<Font name="VendorerButtonFont" inherits="VendorerBaseFontFamily" outline="NORMAL" virtual="true">
+	<Font name="DjinnisVendorerButtonFont" inherits="DjinnisVendorerBaseFontFamily" outline="NORMAL" virtual="true">
 		<Shadow>
 			<Offset>
 				<AbsDimension x="0" y="-1"/>
@@ -45,7 +45,7 @@
 		<Color r="1" g="1" b="1"/>
 	</Font>
 	
-	<Font name="VendorerBigFont" font="Interface\AddOns\Vendorer\media\DORISPP.TTF" outline="NORMAL" virtual="true">
+	<Font name="DjinnisVendorerBigFont" font="Interface\AddOns\DjinnisVendorer\media\DORISPP.TTF" outline="NORMAL" virtual="true">
 		<Shadow>
 			<Offset>
 				<AbsDimension x="0" y="-2"/>
@@ -58,7 +58,7 @@
 		<Color r="1" g="1" b="1"/>
 	</Font>
 	
-	<Font name="VendorerCheckButtonFont" font="Interface\AddOns\Vendorer\media\DORISPP.TTF" outline="NORMAL" virtual="true">
+	<Font name="DjinnisVendorerCheckButtonFont" font="Interface\AddOns\DjinnisVendorer\media\DORISPP.TTF" outline="NORMAL" virtual="true">
 		<Shadow>
 			<Offset>
 				<AbsDimension x="0" y="-1"/>
@@ -71,33 +71,33 @@
 		<Color r="1" g="1" b="1"/>
 	</Font>
 	
-	<Frame name="VendorerFramerateWatcher">
+	<Frame name="DjinnisVendorerFramerateWatcher">
 		<Scripts>
-			<OnUpdate function="VendorerFramerateWatcher_OnUpdate"/>
+			<OnUpdate function="DjinnisVendorerFramerateWatcher_OnUpdate"/>
 		</Scripts>
 	</Frame>
 	
-	<Button name="VendorerPanelButtonTemplate" inherits="UIPanelButtonTemplate" virtual="true">
-		<NormalFont style="VendorerButtonFont"/>
-		<HighlightFont style="VendorerButtonFontHighlight"/>
-		<DisabledFont style="VendorerButtonFont"/>
+	<Button name="DjinnisVendorerPanelButtonTemplate" inherits="UIPanelButtonTemplate" virtual="true">
+		<NormalFont style="DjinnisVendorerButtonFont"/>
+		<HighlightFont style="DjinnisVendorerButtonFontHighlight"/>
+		<DisabledFont style="DjinnisVendorerButtonFont"/>
 	</Button>
 	
-	<Frame name="VendorerMerchantItemRarityBorderTemplate" virtual="true" enableMouse="false">
+	<Frame name="DjinnisVendorerMerchantItemRarityBorderTemplate" virtual="true" enableMouse="false">
 		<Anchors>
 			<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="-1" y="1"/>
 			<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parent" x="1" y="-1"/>
 		</Anchors>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture name="$parentInset" file="Interface\AddOns\Vendorer\media\Border">
+				<Texture name="$parentInset" file="Interface\AddOns\DjinnisVendorer\media\Border">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="1" y="-1"/>
 						<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parent" x="-1" y="1"/>
 					</Anchors>
 					<Color r="0" g="0" b="0" a="0.5"/>
 				</Texture>
-				<Texture name="$parentShadow" file="Interface\AddOns\Vendorer\media\Border">
+				<Texture name="$parentShadow" file="Interface\AddOns\DjinnisVendorer\media\Border">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="-2" y="2"/>
 						<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parent" x="2" y="-2"/>
@@ -106,12 +106,12 @@
 				</Texture>
 			</Layer>
 			<Layer level="ARTWORK">
-				<Texture name="$parentBorder" parentKey="border" file="Interface\AddOns\Vendorer\media\Border" setAllPoints="true">
+				<Texture name="$parentBorder" parentKey="border" file="Interface\AddOns\DjinnisVendorer\media\Border" setAllPoints="true">
 					<Color r="1" g="1" b="1"/>
 				</Texture>
 			</Layer>
 			<Layer level="OVERLAY">
-				<Texture name="$parentBorderHighlight" parentKey="highlight" file="Interface\AddOns\Vendorer\media\Border" setAllPoints="true" alphaMode="ADD" hidden="true">
+				<Texture name="$parentBorderHighlight" parentKey="highlight" file="Interface\AddOns\DjinnisVendorer\media\Border" setAllPoints="true" alphaMode="ADD" hidden="true">
 					<Color r="1" g="1" b="1" a="0.85"/>
 				</Texture>
 			</Layer>
@@ -124,11 +124,11 @@
 				</Anchors>
 				<Layers>
 					<Layer level="OVERLAY">
-						<Texture parentKey="iconSelf" file="Interface\AddOns\Vendorer\media\TransmogrifyAsterisk" setAllPoints="true" hidden="true">
+						<Texture parentKey="iconSelf" file="Interface\AddOns\DjinnisVendorer\media\TransmogrifyAsterisk" setAllPoints="true" hidden="true">
 							<Color r="1" g="1" b="1"/>
 							<TexCoords left="0" right="0.5" top="0" bottom="1"/>
 						</Texture>
-						<Texture parentKey="iconOther" file="Interface\AddOns\Vendorer\media\TransmogrifyAsterisk" setAllPoints="true" hidden="true">
+						<Texture parentKey="iconOther" file="Interface\AddOns\DjinnisVendorer\media\TransmogrifyAsterisk" setAllPoints="true" hidden="true">
 							<Color r="1" g="1" b="1"/>
 							<TexCoords left="0.5" right="1" top="0" bottom="1"/>
 						</Texture>
@@ -138,22 +138,22 @@
 		</Frames>
 	</Frame>
 	
-	<Frame name="VendorerMerchantItem1Rarity" parent="MerchantItem1ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem2Rarity" parent="MerchantItem2ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem3Rarity" parent="MerchantItem3ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem4Rarity" parent="MerchantItem4ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem5Rarity" parent="MerchantItem5ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem6Rarity" parent="MerchantItem6ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem7Rarity" parent="MerchantItem7ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem8Rarity" parent="MerchantItem8ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem9Rarity" parent="MerchantItem9ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem10Rarity" parent="MerchantItem10ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem11Rarity" parent="MerchantItem11ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
-	<Frame name="VendorerMerchantItem12Rarity" parent="MerchantItem12ItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantItem1Rarity" parent="MerchantItem1ItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantItem2Rarity" parent="MerchantItem2ItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantItem3Rarity" parent="MerchantItem3ItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantItem4Rarity" parent="MerchantItem4ItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantItem5Rarity" parent="MerchantItem5ItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantItem6Rarity" parent="MerchantItem6ItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantItem7Rarity" parent="MerchantItem7ItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantItem8Rarity" parent="MerchantItem8ItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantItem9Rarity" parent="MerchantItem9ItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantItem10Rarity" parent="MerchantItem10ItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantItem11Rarity" parent="MerchantItem11ItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantItem12Rarity" parent="MerchantItem12ItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
 
-	<Frame name="VendorerMerchantBuyBackItemRarity" parent="MerchantBuyBackItemItemButton" inherits="VendorerMerchantItemRarityBorderTemplate"/>
+	<Frame name="DjinnisVendorerMerchantBuyBackItemRarity" parent="MerchantBuyBackItemItemButton" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate"/>
 	
-	<Button name="VendorerToggleExtensionFrameButtonTemplate" virtual="true">
+	<Button name="DjinnisVendorerToggleExtensionFrameButtonTemplate" virtual="true">
 		<Size x="32" y="32"/>
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -166,24 +166,24 @@
 			</Layer>
 		</Layers>
 		<Scripts>
-			<OnClick function="VendorerToggleExtensionFrameButton_OnClick"/>
+			<OnClick function="DjinnisVendorerToggleExtensionFrameButton_OnClick"/>
 			<OnShow>
 				self:SetFrameLevel(MerchantFrame:GetFrameLevel()+2);
 			</OnShow>
-			<OnEnter function="VendorerToggleExtensionFrameButton_OnEnter"/>
+			<OnEnter function="DjinnisVendorerToggleExtensionFrameButton_OnEnter"/>
 			<OnLeave function="GameTooltip_Hide"/>
 		</Scripts>
 	</Button>
 	
-	<Frame name="VendorerToggleExtensionFrameButtons" parent="MerchantFrame">
+	<Frame name="DjinnisVendorerToggleExtensionFrameButtons" parent="MerchantFrame">
 		<Size x="60" y="32"/>
 		<Anchors>
 			<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="MerchantFrame" x="-220" y="-29"/>
 		</Anchors>
 		<Frames>
-			<Button name="VendorerToggleExtensionFrameButtonContract" id="1" inherits="VendorerToggleExtensionFrameButtonTemplate">
+			<Button name="DjinnisVendorerToggleExtensionFrameButtonContract" id="1" inherits="DjinnisVendorerToggleExtensionFrameButtonTemplate">
 				<KeyValues>
-					<KeyValue key="tooltipTitle" value="VENDORER_CONTRACT_BUTTON_TITLE_TEXT" type="string"/>
+					<KeyValue key="tooltipTitle" value="DJINNISVENDORER_CONTRACT_BUTTON_TITLE_TEXT" type="string"/>
 				</KeyValues>
 				<Anchors>
 					<Anchor point="LEFT" relativePoint="LEFT" relativeTo="$parent" x="0" y="0"/>
@@ -193,12 +193,12 @@
 				<DisabledTexture file="Interface\Buttons\UI-SpellbookIcon-PrevPage-Disabled"/>
 				<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
 			</Button>
-			<Button name="VendorerToggleExtensionFrameButtonExpand" id="2" inherits="VendorerToggleExtensionFrameButtonTemplate">
+			<Button name="DjinnisVendorerToggleExtensionFrameButtonExpand" id="2" inherits="DjinnisVendorerToggleExtensionFrameButtonTemplate">
 				<KeyValues>
-					<KeyValue key="tooltipTitle" value="VENDORER_EXPAND_BUTTON_TITLE_TEXT" type="string"/>
+					<KeyValue key="tooltipTitle" value="DJINNISVENDORER_EXPAND_BUTTON_TITLE_TEXT" type="string"/>
 				</KeyValues>
 				<Anchors>
-					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="VendorerToggleExtensionFrameButtonContract" x="-6" y="0"/>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="DjinnisVendorerToggleExtensionFrameButtonContract" x="-6" y="0"/>
 				</Anchors>
 				<NormalTexture file="Interface\Buttons\UI-SpellbookIcon-NextPage-Up"/>
 				<PushedTexture file="Interface\Buttons\UI-SpellbookIcon-NextPage-Down"/>
@@ -208,7 +208,7 @@
 		</Frames>
 	</Frame>
 	
-	<GameTooltip name="VendorerHintTooltip" parent="MerchantFrame" inherits="GameTooltipTemplate" hidden="true">
+	<GameTooltip name="DjinnisVendorerHintTooltip" parent="MerchantFrame" inherits="GameTooltipTemplate" hidden="true">
 		<Anchors>
 			<Anchor point="CENTER"/>
 		</Anchors>
@@ -217,7 +217,7 @@
 				if self.SetBackdrop then
 					self:SetBackdrop{
 						bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
-						edgeFile = [[Interface\AddOns\Vendorer\media\TooltipBorder]],
+						edgeFile = [[Interface\AddOns\DjinnisVendorer\media\TooltipBorder]],
 						edgeSize = 16,
 						tile = true, tileSize = 16,
 						insets = {left = 4, right = 4, top = 4, bottom = 4}
@@ -229,7 +229,7 @@
 		</Scripts>
 	</GameTooltip>
 
-	<GameTooltip name="VendorerTooltip" inherits="GameTooltipTemplate" hidden="true">
+	<GameTooltip name="DjinnisVendorerTooltip" inherits="GameTooltipTemplate" hidden="true">
 		<Anchors>
 			<Anchor point="CENTER"/>
 		</Anchors>
@@ -244,7 +244,7 @@
 		</Scripts>
 	</GameTooltip>
 	
-	<Frame name="VendorerMerchantFrameExtension" parent="MerchantFrame" enableMouse="false">
+	<Frame name="DjinnisVendorerMerchantFrameExtension" parent="MerchantFrame" enableMouse="false">
 		<Size x="638" y="441"/>
 		<Anchors>
 			<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="$parent" x="-10" y="-79"/>
@@ -257,7 +257,7 @@
 				</Anchors>
 				<Layers>
 					<Layer level="BACKGROUND">
-						<Texture file="Interface/AddOns/Vendorer/media/MerchantFrameExtensionNarrow">
+						<Texture file="Interface/AddOns/DjinnisVendorer/media/MerchantFrameExtensionNarrow">
 							<TexCoords left="0" right="0.8203125" top="0" bottom="0.861328125"/>
 						</Texture>
 					</Layer>
@@ -270,7 +270,7 @@
 				</Anchors>
 				<Layers>
 					<Layer level="BACKGROUND">
-						<Texture file="Interface/AddOns/Vendorer/media/MerchantFrameExtensionWide">
+						<Texture file="Interface/AddOns/DjinnisVendorer/media/MerchantFrameExtensionWide">
 							<TexCoords left="0" right="0.6162109375" top="0" bottom="0.861328125"/>
 						</Texture>
 					</Layer>
@@ -285,25 +285,25 @@
 		</Scripts>
 	</Frame>
 	
-	<Frame name="VendorerCheckButtonTemplate" inherits="UICheckButtonTemplate" virtual="true">
+	<Frame name="DjinnisVendorerCheckButtonTemplate" inherits="UICheckButtonTemplate" virtual="true">
 		<Scripts>
-			<OnLoad function="VendorerCheckButtonTemplate_OnLoad"/>
-			<OnEnter function="VendorerCheckButtonTemplate_OnEnter"/>
-			<OnClick function="VendorerCheckButtonTemplate_OnClick"/>
+			<OnLoad function="DjinnisVendorerCheckButtonTemplate_OnLoad"/>
+			<OnEnter function="DjinnisVendorerCheckButtonTemplate_OnEnter"/>
+			<OnClick function="DjinnisVendorerCheckButtonTemplate_OnClick"/>
 			<OnLeave>
 				GameTooltip:Hide();
 			</OnLeave>
 		</Scripts>
 	</Frame>
 	
-	<Button name="VendorerFilteringButtonTemplate" virtual="true">
+	<Button name="DjinnisVendorerFilteringButtonTemplate" virtual="true">
 		<Size x="64" y="64"/>
 		<HitRectInsets>
 			<AbsInset left="20" right="20" top="20" bottom="20"/>
 		</HitRectInsets>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture parentKey="icon" file="Interface\AddOns\Vendorer\media\FilteringButton">
+				<Texture parentKey="icon" file="Interface\AddOns\DjinnisVendorer\media\FilteringButton">
 					<Size x="46" y="46"/>
 					<Anchors>
 						<Anchor point="CENTER"/>
@@ -335,13 +335,13 @@
 		</HighlightTexture>
 	</Button>
 	
-	<Frame name="VendorerExtensionFrameItems" parent="MerchantFrame">
+	<Frame name="DjinnisVendorerExtensionFrameItems" parent="MerchantFrame">
 		<Size x="160" y="355"/>
 		<Anchors>
-			<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="VendorerMerchantFrameExtension" x="0" y="0"/>
+			<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="DjinnisVendorerMerchantFrameExtension" x="0" y="0"/>
 		</Anchors>
 		<Frames>
-			<EditBox name="VendorerFilterEditBox" inherits="SearchBoxTemplate" letters="60">
+			<EditBox name="DjinnisVendorerFilterEditBox" inherits="SearchBoxTemplate" letters="60">
 				<Size x="140" y="20"/>
 				<Anchors>
 					<Anchor point="TOP" relativePoint="TOP" relativeTo="$parent" x="4" y="-16"/>
@@ -351,81 +351,81 @@
 						SearchBoxTemplate_OnLoad(self);
 						self.Instructions:SetText("Search")
 					</OnLoad>
-					<OnTextChanged function="Vendorer_OnSearchTextChanged"/>
+					<OnTextChanged function="DjinnisVendorer_OnSearchTextChanged"/>
 					<OnEscapePressed>
 						self:ClearFocus();
-						Vendorer_OnSearchTextChanged(self);
+						DjinnisVendorer_OnSearchTextChanged(self);
 					</OnEscapePressed>
-					<OnEnter function="VendorerFilterEditBox_OnEnter"/>
-					<OnLeave function="VendorerFilterEditBox_OnLeave"/>
+					<OnEnter function="DjinnisVendorerFilterEditBox_OnEnter"/>
+					<OnLeave function="DjinnisVendorerFilterEditBox_OnLeave"/>
 				</Scripts>
 			</EditBox>
 			
-			<Button name="VendorerFilteringButton" inherits="VendorerFilteringButtonTemplate">
+			<Button name="DjinnisVendorerFilteringButton" inherits="DjinnisVendorerFilteringButtonTemplate">
 				<Anchors>
-					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="VendorerFilterEditBox" x="-20" y="-2"/>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="DjinnisVendorerFilterEditBox" x="-20" y="-2"/>
 				</Anchors>
 				<Scripts>
 					<OnLoad>
 						self:SetScale(0.8);
 						self:SetFrameLevel(1000);
 					</OnLoad>
-					<OnEnter function="VendorerFilteringButton_OnEnter"/>
-					<OnLeave function="VendorerFilteringButton_OnLeave"/>
-					<OnClick function="VendorerFilteringButton_OnClick"/>
+					<OnEnter function="DjinnisVendorerFilteringButton_OnEnter"/>
+					<OnLeave function="DjinnisVendorerFilteringButton_OnLeave"/>
+					<OnClick function="DjinnisVendorerFilteringButton_OnClick"/>
 				</Scripts>
 			</Button>
 			
-			<Button name="VendorerSellJunkButton" inherits="VendorerPanelButtonTemplate" text="VENDORER_SELL_JUNK_ITEMS_TEXT">
+			<Button name="DjinnisVendorerSellJunkButton" inherits="DjinnisVendorerPanelButtonTemplate" text="DJINNISVENDORER_SELL_JUNK_ITEMS_TEXT">
 				<Size x="144" y="26"/>
 				<Anchors>
 					<Anchor point="TOP" relativePoint="TOP" relativeTo="$parent" x="1" y="-56"/>
 				</Anchors>
 				<Scripts>
-					<OnClick function="VendorerSellJunkButton_OnClick"/>
-					<OnEnter function="VendorerSellJunkButton_OnEnter"/>
-					<OnLeave function="VendorerSellButton_OnLeave"/>
+					<OnClick function="DjinnisVendorerSellJunkButton_OnClick"/>
+					<OnEnter function="DjinnisVendorerSellJunkButton_OnEnter"/>
+					<OnLeave function="DjinnisVendorerSellButton_OnLeave"/>
 				</Scripts>
 			</Button>
-			<Button name="VendorerSellUnusablesButton" inherits="VendorerPanelButtonTemplate" text="VENDORER_SELL_UNUSABLE_ITEMS_TEXT">
+			<Button name="DjinnisVendorerSellUnusablesButton" inherits="DjinnisVendorerPanelButtonTemplate" text="DJINNISVENDORER_SELL_UNUSABLE_ITEMS_TEXT">
 				<Size x="144" y="26"/>
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="VendorerSellJunkButton" x="0" y="-6"/>
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="DjinnisVendorerSellJunkButton" x="0" y="-6"/>
 				</Anchors>
 				<Scripts>
-					<OnClick function="VendorerSellUnusablesButton_OnClick"/>
-					<OnEnter function="VendorerSellUnusablesButton_OnEnter"/>
-					<OnLeave function="VendorerSellButton_OnLeave"/>
+					<OnClick function="DjinnisVendorerSellUnusablesButton_OnClick"/>
+					<OnEnter function="DjinnisVendorerSellUnusablesButton_OnEnter"/>
+					<OnLeave function="DjinnisVendorerSellButton_OnLeave"/>
 				</Scripts>
 			</Button>
-			<CheckButton name="VendorerAutoSellJunkButton" inherits="VendorerCheckButtonTemplate" text="VENDORER_AUTO_SELL_JUNK_TITLE_TEXT">
+			<CheckButton name="DjinnisVendorerAutoSellJunkButton" inherits="DjinnisVendorerCheckButtonTemplate" text="DJINNISVENDORER_AUTO_SELL_JUNK_TITLE_TEXT">
 				<KeyValues>
-					<KeyValue key="tooltipTitle" value="VENDORER_AUTO_SELL_JUNK_TITLE_TEXT" type="string"/>
-					<KeyValue key="tooltipText" value="VENDORER_AUTO_SELL_JUNK_HINT_TEXT" type="string"/>
+					<KeyValue key="tooltipTitle" value="DJINNISVENDORER_AUTO_SELL_JUNK_TITLE_TEXT" type="string"/>
+					<KeyValue key="tooltipText" value="DJINNISVENDORER_AUTO_SELL_JUNK_HINT_TEXT" type="string"/>
 				</KeyValues>
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="VendorerSellUnusablesButton" x="0" y="-6"/>
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="DjinnisVendorerSellUnusablesButton" x="0" y="-6"/>
 				</Anchors>
 			</CheckButton>
-			<CheckButton name="VendorerAutoRepairButton" inherits="VendorerCheckButtonTemplate" text="VENDORER_AUTO_REPAIR_TITLE_TEXT">
+			<CheckButton name="DjinnisVendorerAutoRepairButton" inherits="DjinnisVendorerCheckButtonTemplate" text="DJINNISVENDORER_AUTO_REPAIR_TITLE_TEXT">
 				<KeyValues>
-					<KeyValue key="tooltipTitle" value="VENDORER_AUTO_REPAIR_TITLE_TEXT" type="string"/>
-					<KeyValue key="tooltipText" value="VENDORER_AUTO_REPAIR_HINT_TEXT" type="string"/>
+					<KeyValue key="tooltipTitle" value="DJINNISVENDORER_AUTO_REPAIR_TITLE_TEXT" type="string"/>
+					<KeyValue key="tooltipText" value="DJINNISVENDORER_AUTO_REPAIR_HINT_TEXT" type="string"/>
 				</KeyValues>
 				<Anchors>
-					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="VendorerAutoSellJunkButton" x="0" y="-25"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="DjinnisVendorerAutoSellJunkButton" x="0" y="-25"/>
 				</Anchors>
 			</CheckButton>
-			<CheckButton name="VendorerAutoSmartRepairButton" inherits="VendorerCheckButtonTemplate" text="VENDORER_USE_SMART_REPAIR_TITLE_TEXT">
+			<CheckButton name="DjinnisVendorerAutoSmartRepairButton" inherits="DjinnisVendorerCheckButtonTemplate" text="DJINNISVENDORER_USE_SMART_REPAIR_TITLE_TEXT">
 				<KeyValues>
-					<KeyValue key="tooltipTitle" value="VENDORER_USE_SMART_REPAIR_TITLE_TEXT" type="string"/>
-					<KeyValue key="tooltipText" value="VENDORER_USE_SMART_REPAIR_HINT_TEXT" type="string"/>
+					<KeyValue key="tooltipTitle" value="DJINNISVENDORER_USE_SMART_REPAIR_TITLE_TEXT" type="string"/>
+					<KeyValue key="tooltipText" value="DJINNISVENDORER_USE_SMART_REPAIR_HINT_TEXT" type="string"/>
 				</KeyValues>
 				<Anchors>
-					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="VendorerAutoRepairButton" x="0" y="-25"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="DjinnisVendorerAutoRepairButton" x="0" y="-25"/>
 				</Anchors>
 			</CheckButton>
-			<Button name="VendorerIgnoreItemsButton">
+			<Button name="DjinnisVendorerIgnoreItemsButton">
 				<Size x="144" y="22"/>
 				<Anchors>
 					<Anchor point="BOTTOM" relativePoint="BOTTOM" relativeTo="$parent" x="0" y="66"/>
@@ -453,7 +453,7 @@
 							</Anchors>
 							<Color r="1" g="0.75" b="0.15"/>
 						</Texture>
-						<FontString name="$parentText" inherits="VendorerButtonFont" justifyH="LEFT" parentKey="text" text="VENDORER_IGNORE_ITEMS_BUTTON_TEXT">
+						<FontString name="$parentText" inherits="DjinnisVendorerButtonFont" justifyH="LEFT" parentKey="text" text="DJINNISVENDORER_IGNORE_ITEMS_BUTTON_TEXT">
 							<Size x="98" y="46"/>
 							<Anchors>
 								<Anchor point="LEFT" x="32" y="0"/>
@@ -469,13 +469,13 @@
 						self:RegisterForDrag("LeftButton");
 						self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
 					</OnLoad>
-					<OnClick function="VendorerIgnoreItemsButton_OnClick"/>
-					<OnEnter function="VendorerIgnoreItemsButton_OnEnter"/>
-					<OnLeave function="VendorerIgnoreItemsButton_OnLeave"/>
+					<OnClick function="DjinnisVendorerIgnoreItemsButton_OnClick"/>
+					<OnEnter function="DjinnisVendorerIgnoreItemsButton_OnEnter"/>
+					<OnLeave function="DjinnisVendorerIgnoreItemsButton_OnLeave"/>
 				</Scripts>
 			</Button>
 			
-			<Button name="VendorerJunkItemsButton">
+			<Button name="DjinnisVendorerJunkItemsButton">
 				<Size x="144" y="22"/>
 				<Anchors>
 					<Anchor point="BOTTOM" relativePoint="BOTTOM" relativeTo="$parent" x="0" y="40"/>
@@ -503,7 +503,7 @@
 							</Anchors>
 							<Color r="1" g="0.75" b="0.15"/>
 						</Texture>
-						<FontString name="$parentText" inherits="VendorerButtonFont" justifyH="RIGHT" parentKey="text" text="VENDORER_ADD_JUNK_BUTTON_TEXT">
+						<FontString name="$parentText" inherits="DjinnisVendorerButtonFont" justifyH="RIGHT" parentKey="text" text="DJINNISVENDORER_ADD_JUNK_BUTTON_TEXT">
 							<Size x="98" y="46"/>
 							<Anchors>
 								<Anchor point="RIGHT" x="-32" y="0"/>
@@ -519,18 +519,18 @@
 						self:RegisterForDrag("LeftButton");
 						self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
 					</OnLoad>
-					<OnClick function="VendorerJunkItemsButton_OnClick"/>
-					<OnEnter function="VendorerJunkItemsButton_OnEnter"/>
-					<OnLeave function="VendorerJunkItemsButton_OnLeave"/>
+					<OnClick function="DjinnisVendorerJunkItemsButton_OnClick"/>
+					<OnEnter function="DjinnisVendorerJunkItemsButton_OnEnter"/>
+					<OnLeave function="DjinnisVendorerJunkItemsButton_OnLeave"/>
 				</Scripts>
 			</Button>
-			<Button name="VendorerSettingsButton" inherits="VendorerPanelButtonTemplate" text="VENDORER_SETTINGS_BUTTON_TEXT">
+			<Button name="DjinnisVendorerSettingsButton" inherits="DjinnisVendorerPanelButtonTemplate" text="DJINNISVENDORER_SETTINGS_BUTTON_TEXT">
 				<Size x="144" y="26"/>
 				<Anchors>
 					<Anchor point="BOTTOM" relativePoint="BOTTOM" relativeTo="$parent" x="0" y="10"/>
 				</Anchors>
 				<Scripts>
-					<OnClick function="VendorerSettingsButton_OnClick"/>
+					<OnClick function="DjinnisVendorerSettingsButton_OnClick"/>
 				</Scripts>
 			</Button>
 		</Frames>
@@ -541,14 +541,14 @@
 		</Scripts>
 	</Frame>
 	
-	<Frame name="VendorerFilteringButtonAlert" parent="MerchantFrame" inherits="GlowBoxTemplate" enableMouse="true" frameStrata="DIALOG" hidden="true">
+	<Frame name="DjinnisVendorerFilteringButtonAlert" parent="MerchantFrame" inherits="GlowBoxTemplate" enableMouse="true" frameStrata="DIALOG" hidden="true">
 		<Size x="220" y="100"/>
 		<Anchors>
-			<Anchor point="LEFT" relativeTo="VendorerFilteringButton" relativePoint="RIGHT" x="14" y="0"/>
+			<Anchor point="LEFT" relativeTo="DjinnisVendorerFilteringButton" relativePoint="RIGHT" x="14" y="0"/>
 		</Anchors>
 		<Layers>
 			<Layer level="OVERLAY">
-				<FontString parentKey="Text" inherits="GameFontHighlightLeft" justifyV="TOP" text="VENDORER_FILTERING_BUTTON_TUTORIAL_TEXT">
+				<FontString parentKey="Text" inherits="GameFontHighlightLeft" justifyV="TOP" text="DJINNISVENDORER_FILTERING_BUTTON_TUTORIAL_TEXT">
 					<Size x="188" y="0"/>
 					<Anchors>
 						<Anchor point="TOPLEFT" x="16" y="-24"/>
@@ -564,7 +564,7 @@
 				<Scripts>
 					<OnClick>
 						self:GetParent():Hide();
-						VendorerFilteringButtonAlertCloseButton_OnClick(self);
+						DjinnisVendorerFilteringButtonAlertCloseButton_OnClick(self);
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -586,14 +586,14 @@
 		</Scripts>
 	</Frame>
 	
-	<Button name="VendorerSmartRepairButton" parent="MerchantGuildBankRepairButton" hidden="true">
+	<Button name="DjinnisVendorerSmartRepairButton" parent="MerchantGuildBankRepairButton" hidden="true">
 		<Size x="28" y="28"/>
 		<Anchors>
 			<Anchor point="LEFT" relativeTo="MerchantGuildBankRepairButton" relativePoint="RIGHT" x="5" y="0"/>
 		</Anchors>
 		<Layers>
 			<Layer level="BORDER">
-				<Texture name="VendorerSmartRepairButtonIcon" file="Interface\Icons\Ability_Siege_Engineer_Automatic_repair_beam">
+				<Texture name="DjinnisVendorerSmartRepairButtonIcon" file="Interface\Icons\Ability_Siege_Engineer_Automatic_repair_beam">
 					<TexCoords left="0.055" right="0.945" top="0.055" bottom="0.945"/>
 				</Texture>
 			</Layer>
@@ -615,9 +615,9 @@
 			</Layer>
 		</Layers>
 		<Scripts>
-			<OnEnter function="VendorerSmartRepairButton_OnEnter"/>
-			<OnLeave function="VendorerSmartRepairButton_OnLeave"/>
-			<OnClick function="VendorerSmartRepairButton_OnClick"/>
+			<OnEnter function="DjinnisVendorerSmartRepairButton_OnEnter"/>
+			<OnLeave function="DjinnisVendorerSmartRepairButton_OnLeave"/>
+			<OnClick function="DjinnisVendorerSmartRepairButton_OnClick"/>
 		</Scripts>
 		<PushedTexture file="Interface\Buttons\UI-Quickslot-Depress"/>
 		<HighlightTexture file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD"/>

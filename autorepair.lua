@@ -1,5 +1,5 @@
 ------------------------------------------------------------
--- Vendorer by Sonaza (https://sonaza.com)
+-- DjinnisVendorer by Djinni, Originally created by Sonaza (https://sonaza.com) as "Vendorer"
 -- Licensed under MIT License
 -- See attached license text in file LICENSE
 ------------------------------------------------------------
@@ -30,7 +30,7 @@ function Addon:GetItemRepairCost()
 	local itemRepairs = {};
 	
 	for index, slotID in ipairs(repairableSlots) do
-		local hasItem, hasCooldown, repairCost = VendorerTooltip:SetInventoryItem("player", slotID);
+		local hasItem, hasCooldown, repairCost = DjinnisVendorerTooltip:SetInventoryItem("player", slotID);
 		if(hasItem and repairCost and repairCost > 0) then
 			tinsert(itemRepairs, {slot = slotID, cost = repairCost});
 		end
@@ -40,7 +40,7 @@ function Addon:GetItemRepairCost()
 		local containerSlots = GetContainerNumSlots(containerID);
 		if(containerSlots > 0) then
 			for containerSlotID = 1, containerSlots do
-				local hasCooldown, repairCost = VendorerTooltip:SetBagItem(containerID, containerSlotID);
+				local hasCooldown, repairCost = DjinnisVendorerTooltip:SetBagItem(containerID, containerSlotID);
 				if(repairCost and repairCost > 0) then
 					tinsert(itemRepairs, {slot = containerID .. ":" .. containerSlotID, cost = repairCost});
 				end
@@ -63,7 +63,7 @@ function Addon:GetContainerRepairCost()
 	local containerRepair = {};
 	
 	for index, slotID in ipairs(repairableSlots) do
-		local hasItem, hasCooldown, repairCost = VendorerTooltip:SetInventoryItem("player", slotID);
+		local hasItem, hasCooldown, repairCost = DjinnisVendorerTooltip:SetInventoryItem("player", slotID);
 		if(hasItem and repairCost and repairCost > 0) then
 			slotRepair[slotID] = repairCost;
 		end
@@ -182,11 +182,11 @@ end
 function Addon:UPDATE_INVENTORY_DURABILITY()
 	local repairAllCost, canRepair = GetRepairAllCost();
 	if(not canRepair) then
-		SetDesaturation(VendorerSmartRepairButtonIcon, true);
-		VendorerSmartRepairButton:Disable();
+		SetDesaturation(DjinnisVendorerSmartRepairButtonIcon, true);
+		DjinnisVendorerSmartRepairButton:Disable();
 	else
-		SetDesaturation(VendorerSmartRepairButtonIcon, false);
-		VendorerSmartRepairButton:Enable();
+		SetDesaturation(DjinnisVendorerSmartRepairButtonIcon, false);
+		DjinnisVendorerSmartRepairButton:Enable();
 	end
 end
 
@@ -200,25 +200,25 @@ function Addon:UpdateRepairButtons()
 		-- repair trio. Re-anchor to whichever rightmost button actually exists
 		-- so we never sit on top of a Blizzard button.
 		local anchorTo = MerchantSellAllJunkButton or MerchantGuildBankRepairButton
-		VendorerSmartRepairButton:ClearAllPoints()
-		VendorerSmartRepairButton:SetPoint("LEFT", anchorTo, "RIGHT", 5, 0)
+		DjinnisVendorerSmartRepairButton:ClearAllPoints()
+		DjinnisVendorerSmartRepairButton:SetPoint("LEFT", anchorTo, "RIGHT", 5, 0)
 
-		VendorerSmartRepairButton:Show();
+		DjinnisVendorerSmartRepairButton:Show();
 		
 		local repairAllCost, canRepair = GetRepairAllCost();
 		if(not canRepair) then
-			SetDesaturation(VendorerSmartRepairButtonIcon, true);
-			VendorerSmartRepairButton:Disable();
+			SetDesaturation(DjinnisVendorerSmartRepairButtonIcon, true);
+			DjinnisVendorerSmartRepairButton:Disable();
 		else
-			SetDesaturation(VendorerSmartRepairButtonIcon, false);
-			VendorerSmartRepairButton:Enable();
+			SetDesaturation(DjinnisVendorerSmartRepairButtonIcon, false);
+			DjinnisVendorerSmartRepairButton:Enable();
 		end
 	else
-		VendorerSmartRepairButton:Hide();
+		DjinnisVendorerSmartRepairButton:Hide();
 	end
 end
 
-function VendorerSmartRepairButton_OnEnter(self)
+function DjinnisVendorerSmartRepairButton_OnEnter(self)
 	local playerMoney, guildMoney = Addon:GetAutoRepairCost(true);
 	
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
@@ -256,13 +256,13 @@ function VendorerSmartRepairButton_OnEnter(self)
 	GameTooltip:Show();
 end
 
-function VendorerSmartRepairButton_OnLeave(self)
+function DjinnisVendorerSmartRepairButton_OnLeave(self)
 	GameTooltip:Hide();
 end
 
-function VendorerSmartRepairButton_OnClick(self)
+function DjinnisVendorerSmartRepairButton_OnClick(self)
 	Addon:DoAutoRepair(true);
 	GameTooltip:Hide();
-	VendorerSmartRepairButton_OnEnter(self);
+	DjinnisVendorerSmartRepairButton_OnEnter(self);
 end
 

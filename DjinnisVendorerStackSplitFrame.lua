@@ -1,5 +1,5 @@
 ------------------------------------------------------------
--- Vendorer by Sonaza (https://sonaza.com)
+-- DjinnisVendorer by Djinni, Originally created by Sonaza (https://sonaza.com) as "Vendorer"
 -- Licensed under MIT License
 -- See attached license text in file LICENSE
 ------------------------------------------------------------
@@ -8,6 +8,42 @@ local ADDON_NAME, Addon = ...;
 local _;
 
 local MAX_STACK_SIZE = 1000000;
+
+------------------------------------------------------------
+-- Filtered/raw API dispatchers. Stack split is invoked from
+-- both the merchant grid (display index, filter wrapper OK)
+-- and the list view (raw index, must bypass the wrapper).
+------------------------------------------------------------
+
+local function api_GetMerchantItemInfo(rawMode, index)
+	if(rawMode) then return Addon:GetUnfilteredMerchantItemInfo(index) end
+	return GetMerchantItemInfo(index);
+end
+
+local function api_GetMerchantItemLink(rawMode, index)
+	if(rawMode) then return Addon:GetUnfilteredMerchantItemLink(index) end
+	return GetMerchantItemLink(index);
+end
+
+local function api_GetMerchantItemMaxStack(rawMode, index)
+	if(rawMode) then return Addon:GetUnfilteredMerchantItemMaxStack(index) end
+	return GetMerchantItemMaxStack(index);
+end
+
+local function api_GetMerchantItemCostInfo(rawMode, index)
+	if(rawMode) then return Addon:GetUnfilteredMerchantCostInfo(index) end
+	return GetMerchantItemCostInfo(index);
+end
+
+local function api_GetMerchantItemCostItem(rawMode, index, costIndex)
+	if(rawMode) then return Addon:GetUnfilteredMerchantCostItem(index, costIndex) end
+	return GetMerchantItemCostItem(index, costIndex);
+end
+
+local function api_BuyMerchantItem(rawMode, index, amount)
+	if(rawMode) then return Addon:RawBuyMerchantItem(index, amount) end
+	return BuyMerchantItem(index, amount);
+end
 
 -- Apparently some currencies can't be used to buy anything other than the specified stack size
 local CURRENCY_CANT_SPLIT = {
@@ -28,32 +64,32 @@ local function CacheCurrencies()
 	end
 end
 
-VendorerStackSplitMixin = {
+DjinnisVendorerStackSplitMixin = {
 	split = 1,
 };
 
--- VendorerStackSplitFrame uses enableKeyboard + OnKeyDown to capture digits /
+-- DjinnisVendorerStackSplitFrame uses enableKeyboard + OnKeyDown to capture digits /
 -- arrows without propagation. Release keyboard while a confirmation popup is
 -- up so DialogKey (and the popup's own ESC/hideOnEscape handling) can see keys.
 local function OnConfirmPopupShow()
-	VendorerStackSplitFrame.okayButton:Disable();
-	VendorerStackSplitFrame:EnableKeyboard(false);
+	DjinnisVendorerStackSplitFrame.okayButton:Disable();
+	DjinnisVendorerStackSplitFrame:EnableKeyboard(false);
 end
 
 local function OnConfirmPopupHide()
-	VendorerStackSplitFrame.okayButton:Enable();
-	VendorerStackSplitFrame:EnableKeyboard(true);
+	DjinnisVendorerStackSplitFrame.okayButton:Enable();
+	DjinnisVendorerStackSplitFrame:EnableKeyboard(true);
 end
 
-StaticPopupDialogs["VENDORER_CONFIRM_PURCHASE_TOKEN_ITEM"] = {
+StaticPopupDialogs["DJINNISVENDORER_CONFIRM_PURCHASE_TOKEN_ITEM"] = {
 	text = CONFIRM_PURCHASE_TOKEN_ITEM,
 	button1 = YES,
 	button2 = NO,
 	OnAccept = function()
-		VendorerStackSplitFrame:DoPurchase();
+		DjinnisVendorerStackSplitFrame:DoPurchase();
 	end,
 	OnCancel = function()
-		VendorerStackSplitFrame.waiting:Hide();
+		DjinnisVendorerStackSplitFrame.waiting:Hide();
 	end,
 	OnShow = OnConfirmPopupShow,
 	OnHide = OnConfirmPopupHide,
@@ -62,15 +98,15 @@ StaticPopupDialogs["VENDORER_CONFIRM_PURCHASE_TOKEN_ITEM"] = {
 	hasItemFrame = 1,
 }
 
-StaticPopupDialogs["VENDORER_CONFIRM_PURCHASE_NONREFUNDABLE_ITEM"] = {
+StaticPopupDialogs["DJINNISVENDORER_CONFIRM_PURCHASE_NONREFUNDABLE_ITEM"] = {
 	text = CONFIRM_PURCHASE_NONREFUNDABLE_ITEM,
 	button1 = YES,
 	button2 = NO,
 	OnAccept = function()
-		VendorerStackSplitFrame:DoPurchase();
+		DjinnisVendorerStackSplitFrame:DoPurchase();
 	end,
 	OnCancel = function()
-		VendorerStackSplitFrame.waiting:Hide();
+		DjinnisVendorerStackSplitFrame.waiting:Hide();
 	end,
 	OnShow = OnConfirmPopupShow,
 	OnHide = OnConfirmPopupHide,
@@ -79,18 +115,23 @@ StaticPopupDialogs["VENDORER_CONFIRM_PURCHASE_NONREFUNDABLE_ITEM"] = {
 	hasItemFrame = 1,
 }
 
-StaticPopupDialogs["VENDORER_CONFIRM_HIGH_COST_ITEM"] = {
+StaticPopupDialogs["DJINNISVENDORER_CONFIRM_HIGH_COST_ITEM"] = {
 	text = CONFIRM_HIGH_COST_ITEM,
 	button1 = YES,
 	button2 = NO,
 	OnAccept = function()
-		VendorerStackSplitFrame:DoPurchase();
+		DjinnisVendorerStackSplitFrame:DoPurchase();
 	end,
 	OnCancel = function()
-		VendorerStackSplitFrame.waiting:Hide();
+		DjinnisVendorerStackSplitFrame.waiting:Hide();
 	end,
 	OnShow = function(self)
-		MoneyFrame_Update(self.moneyFrame, MerchantFrame.price * MerchantFrame.count);
+		-- Mainline StaticPopup may not auto-create the money frame for this
+		-- dialog any more; defensively look it up under both casings.
+		local moneyFrame = self.moneyFrame or self.MoneyFrame;
+		if(moneyFrame) then
+			MoneyFrame_Update(moneyFrame, MerchantFrame.price * MerchantFrame.count);
+		end
 		OnConfirmPopupShow();
 	end,
 	OnHide = OnConfirmPopupHide,
@@ -100,7 +141,7 @@ StaticPopupDialogs["VENDORER_CONFIRM_HIGH_COST_ITEM"] = {
 	hasItemFrame = 1,
 };
 
-function VendorerStackSplitMixin:OnHide()
+function DjinnisVendorerStackSplitMixin:OnHide()
 	self.itemButton.hasStackSplit = 0;
 
 	if(self.dialog and self.dialog:IsVisible()) then
@@ -119,19 +160,19 @@ function VendorerStackSplitMixin:OnHide()
 	self:UnregisterEvent("CURRENCY_DISPLAY_UPDATE");
 end
 
-function VendorerStackSplitMixin:Decrement()
+function DjinnisVendorerStackSplitMixin:Decrement()
 	if(self.purchasing) then return end
 	self.split = math.max(self.minSplit, self.split - self.minSplit);
 	self:Update();
 end
 
-function VendorerStackSplitMixin:Increment()
+function DjinnisVendorerStackSplitMixin:Increment()
 	if(self.purchasing) then return end
 	self.split = math.min(self.maxPurchase, self.split + self.minSplit);
 	self:Update();
 end
 
-function VendorerStackSplitMixin:Update()
+function DjinnisVendorerStackSplitMixin:Update()
 	self.split = math.max(self.minSplit, math.min(self.maxPurchase, self.split));
 	
 	if(self.split == self.minSplit) then
@@ -163,35 +204,36 @@ function VendorerStackSplitMixin:Update()
 end
 
 local ICON_PATTERN = "|T%s:12:12:0:0|t";
-function VendorerStackSplitMixin:GetTotalPriceString(index, quantity)
+function DjinnisVendorerStackSplitMixin:GetTotalPriceString(index, quantity)
 	index = index or self.merchantItemIndex;
 	quantity = quantity or self.split;
-	
+	local rawMode = self.rawMode;
+
 	local text = "";
-	
-	local _, _, price, stackCount, _, _, _, extendedCost = GetMerchantItemInfo(index);
+
+	local _, _, price, stackCount, _, _, _, extendedCost = api_GetMerchantItemInfo(rawMode, index);
 	if(price and price > 0) then
 		local totalPrice = math.ceil((price / stackCount) * quantity);
 		text = ("%s %s "):format(text, GetCoinTextureString(totalPrice, 12));
 	end
-	
+
 	if(extendedCost) then
-		local currencyCount = GetMerchantItemCostInfo(index);
+		local currencyCount = api_GetMerchantItemCostInfo(rawMode, index);
 		for currencyIndex = 1, currencyCount do
-			local itemTexture, requiredCurrency = GetMerchantItemCostItem(index, currencyIndex);
+			local itemTexture, requiredCurrency = api_GetMerchantItemCostItem(rawMode, index, currencyIndex);
 			local totalPrice = (requiredCurrency / stackCount) * quantity;
 			text = ("%s %s%s"):format(text, BreakUpLargeNumbers(totalPrice), ICON_PATTERN:format(itemTexture));
 		end
 	end
-	
+
 	return strtrim(text);
 end
 
-function VendorerStackSplitMixin:Okay()
+function DjinnisVendorerStackSplitMixin:Okay()
 	if(self.purchasing) then return end
-	
+
 	self.waiting:Show();
-	
+
 	if(self.itemButton.extendedCost) then
 		self:ConfirmExtendedItemCost(self.itemButton, self.split);
 	elseif(self.itemButton.showNonrefundablePrompt) then
@@ -200,24 +242,25 @@ function VendorerStackSplitMixin:Okay()
 		if(self.split > self.maxStack) then
 			self:ConfirmHighCostItem(self.itemButton, self.split);
 		else
-			BuyMerchantItem(self.merchantItemIndex, self.split);
+			api_BuyMerchantItem(self.rawMode, self.merchantItemIndex, self.split);
 			self:Cancel();
 		end
 	end
 end
 
-function VendorerStackSplitMixin:ConfirmExtendedItemCost(itemButton, numToPurchase)
+function DjinnisVendorerStackSplitMixin:ConfirmExtendedItemCost(itemButton, numToPurchase)
 	local stackCount = itemButton.count or 1;
 	numToPurchase = numToPurchase or stackCount;
-	
+	local rawMode = self.rawMode;
+
 	local index = itemButton:GetID();
 	local buyingMultipleStacks = numToPurchase > self.maxStack;
-	
-	if(GetMerchantItemCostInfo(index) == 0 and not itemButton.showNonrefundablePrompt) then
+
+	if(api_GetMerchantItemCostInfo(rawMode, index) == 0 and not itemButton.showNonrefundablePrompt) then
 		if(buyingMultipleStacks) then
 			self:ConfirmHighCostItem(itemButton, numToPurchase);
 		else
-			BuyMerchantItem(itemButton:GetID(), numToPurchase);
+			api_BuyMerchantItem(rawMode, index, numToPurchase);
 		end
 		return;
 	end
@@ -272,13 +315,13 @@ function VendorerStackSplitMixin:ConfirmExtendedItemCost(itemButton, numToPurcha
 	};
 	
 	if (itemButton.showNonrefundablePrompt) then
-		self.dialog = StaticPopup_Show("VENDORER_CONFIRM_PURCHASE_NONREFUNDABLE_ITEM", itemsString, specText, itemInfo);
+		self.dialog = StaticPopup_Show("DJINNISVENDORER_CONFIRM_PURCHASE_NONREFUNDABLE_ITEM", itemsString, specText, itemInfo);
 	else
-		self.dialog = StaticPopup_Show("VENDORER_CONFIRM_PURCHASE_TOKEN_ITEM", itemsString, specText, itemInfo);
+		self.dialog = StaticPopup_Show("DJINNISVENDORER_CONFIRM_PURCHASE_TOKEN_ITEM", itemsString, specText, itemInfo);
 	end
 end
 
-function VendorerStackSplitMixin:ConfirmHighCostItem(itemButton, quantity)
+function DjinnisVendorerStackSplitMixin:ConfirmHighCostItem(itemButton, quantity)
 	local stackCount = itemButton.count or 1;
 	
 	quantity = (quantity or 1);
@@ -296,7 +339,7 @@ function VendorerStackSplitMixin:ConfirmHighCostItem(itemButton, quantity)
 	MerchantFrame.count = quantity;
 	MerchantFrame.price = itemButton.price / stackCount;
 	
-	self.dialog = StaticPopup_Show("VENDORER_CONFIRM_HIGH_COST_ITEM",
+	self.dialog = StaticPopup_Show("DJINNISVENDORER_CONFIRM_HIGH_COST_ITEM",
 		itemButton.link, nil, 
 		{
 			["texture"] = itemButton.texture, ["name"] = itemName, ["color"] = {r, g, b, 1}, 
@@ -305,7 +348,7 @@ function VendorerStackSplitMixin:ConfirmHighCostItem(itemButton, quantity)
 	);
 end
 
-function VendorerStackSplitMixin:DoPurchase()
+function DjinnisVendorerStackSplitMixin:DoPurchase()
 	if(self.purchasing) then return end
 	if(not self.purchaseInfo) then
 		error("Purchase info is missing", 2);
@@ -326,7 +369,7 @@ function VendorerStackSplitMixin:DoPurchase()
 	end
 end
 
-function VendorerStackSplitMixin:PurchaseNext()
+function DjinnisVendorerStackSplitMixin:PurchaseNext()
 	if(not self.purchasing) then return -1 end
 	
 	-- Number of stacks safe to purchase at a time (without causing "item is busy" errors)
@@ -338,8 +381,8 @@ function VendorerStackSplitMixin:PurchaseNext()
 	local remaining = math.min(self.purchaseInfo.remaining, maximumStacksToPurchase * self.purchaseInfo.stackSize);
 	while(remaining > 0) do
 		local quantity = math.min(remaining, self.purchaseInfo.stackSize);
-		BuyMerchantItem(self.merchantItemIndex, quantity);
-		
+		api_BuyMerchantItem(self.rawMode, self.merchantItemIndex, quantity);
+
 		remaining = remaining - quantity;
 		self.purchaseInfo.remaining = self.purchaseInfo.remaining - quantity;
 	end
@@ -349,11 +392,11 @@ function VendorerStackSplitMixin:PurchaseNext()
 	return self.purchaseInfo.remaining;
 end
 
-function VendorerStackSplitMixin:IsPurchasing()
+function DjinnisVendorerStackSplitMixin:IsPurchasing()
 	return self.purchasing;
 end
 
-function VendorerStackSplitMixin:CancelPurchase()
+function DjinnisVendorerStackSplitMixin:CancelPurchase()
 	self.waiting:Hide();
 	self.purchasing = false;
 	self.purchaseInfo = nil;
@@ -362,7 +405,7 @@ function VendorerStackSplitMixin:CancelPurchase()
 	self:Cancel();
 end
 
-function VendorerStackSplitMixin:OnEvent(event, ...)
+function DjinnisVendorerStackSplitMixin:OnEvent(event, ...)
 	if(self.purchaseInfo.remaining > 0) then
 		local remaining = self:PurchaseNext();
 		
@@ -380,23 +423,23 @@ function VendorerStackSplitMixin:OnEvent(event, ...)
 	end
 end
 
-function VendorerStackSplitMixin:Cancel()
+function DjinnisVendorerStackSplitMixin:Cancel()
 	self.waiting:Hide();
 	self:Hide();
 end
 
-hooksecurefunc("MerchantPrevPageButton_OnClick", function() VendorerStackSplitFrame:Cancel() end);
-hooksecurefunc("MerchantNextPageButton_OnClick", function() VendorerStackSplitFrame:Cancel() end);
+hooksecurefunc("MerchantPrevPageButton_OnClick", function() DjinnisVendorerStackSplitFrame:Cancel() end);
+hooksecurefunc("MerchantNextPageButton_OnClick", function() DjinnisVendorerStackSplitFrame:Cancel() end);
 
-function VendorerStackSplitFrameStackButton_OnClick(self, button)
-	local threshold = VendorerStackSplitFrame.maxStack;
+function DjinnisVendorerStackSplitFrameStackButton_OnClick(self, button)
+	local threshold = DjinnisVendorerStackSplitFrame.maxStack;
 	if(IsControlKeyDown()) then
 		threshold = math.floor(threshold * 0.25);
 	end
-	VendorerStackSplitFrame:Stack(button, threshold);
+	DjinnisVendorerStackSplitFrame:Stack(button, threshold);
 end
 
-function VendorerStackSplitMixin:Stack(button_or_delta, threshold)
+function DjinnisVendorerStackSplitMixin:Stack(button_or_delta, threshold)
 	if(self.purchasing) then return end
 	
 	threshold = math.max(1, math.min(self.maxStack, threshold or self.maxStack));
@@ -410,9 +453,9 @@ function VendorerStackSplitMixin:Stack(button_or_delta, threshold)
 	self:Update();
 end
 
-function VendorerStackSplitFrameStackButton_OnEnter(self)
-	GameTooltip:SetOwner(VendorerStackSplitFrame, "ANCHOR_NONE");
-	GameTooltip:SetPoint("TOPLEFT", VendorerStackSplitFrame, "TOPRIGHT", 5, 0);
+function DjinnisVendorerStackSplitFrameStackButton_OnEnter(self)
+	GameTooltip:SetOwner(DjinnisVendorerStackSplitFrame, "ANCHOR_NONE");
+	GameTooltip:SetPoint("TOPLEFT", DjinnisVendorerStackSplitFrame, "TOPRIGHT", 5, 0);
 	
 	GameTooltip:AddLine("Stack");
 	GameTooltip:AddLine("Increases or decreases current number of items a full stack at a time.", 1, 1, 1, true);
@@ -426,7 +469,7 @@ function VendorerStackSplitFrameStackButton_OnEnter(self)
 	GameTooltip:Show();
 end
 
-function VendorerStackSplitMixin:SetMax(button)
+function DjinnisVendorerStackSplitMixin:SetMax(button)
 	if(self.purchasing) then return end
 	
 	if(button == "LeftButton") then
@@ -441,11 +484,11 @@ function VendorerStackSplitMixin:SetMax(button)
 	self:Update();
 end
 
-function VendorerStackSplitFrameSetMaxButton_OnEnter(self)
-	GameTooltip:SetOwner(VendorerStackSplitFrame, "ANCHOR_NONE");
-	GameTooltip:SetPoint("TOPLEFT", VendorerStackSplitFrame, "TOPRIGHT", 5, 0);
+function DjinnisVendorerStackSplitFrameSetMaxButton_OnEnter(self)
+	GameTooltip:SetOwner(DjinnisVendorerStackSplitFrame, "ANCHOR_NONE");
+	GameTooltip:SetPoint("TOPLEFT", DjinnisVendorerStackSplitFrame, "TOPRIGHT", 5, 0);
 	
-	local frame = VendorerStackSplitFrame;
+	local frame = DjinnisVendorerStackSplitFrame;
 	
 	GameTooltip:AddLine("Set Max");
 	GameTooltip:AddLine("Quickly set the number of items to the maximum you can fit, afford or are available.", 1, 1, 1, true);
@@ -469,7 +512,7 @@ function VendorerStackSplitFrameSetMaxButton_OnEnter(self)
 	GameTooltip:Show();
 end
 
-function VendorerStackSplitMixin:OnMouseWheel(delta)
+function DjinnisVendorerStackSplitMixin:OnMouseWheel(delta)
 	if(self.purchasing) then return end
 	
 	if(IsShiftKeyDown()) then
@@ -501,39 +544,40 @@ function Addon:GetProperItemCount(item)
 	return itemCount;
 end
 
-function VendorerStackSplitMixin:Open(merchantItemIndex, parent, anchor)
+function DjinnisVendorerStackSplitMixin:Open(merchantItemIndex, parent, anchor, rawMode)
 	-- Hard reset: if a prior purchase left us in a zombie state, don't refuse to open.
 	self.purchasing = false;
 	self.purchaseInfo = nil;
 
 	self:SetScript("OnChar", self.OnChar);
 	self:SetScript("OnKeyDown", self.OnKeyDown);
-	
+
 	CacheCurrencies();
-	
+
+	self.rawMode = rawMode and true or false;
 	self.merchantItemIndex = merchantItemIndex;
 	self.split = 1;
-	
-	local maxStack = GetMerchantItemMaxStack(merchantItemIndex);
-	local _, _, price, stackCount, numAvailable, isPurchasable, _, extendedCost = GetMerchantItemInfo(merchantItemIndex);
+
+	local maxStack = api_GetMerchantItemMaxStack(self.rawMode, merchantItemIndex);
+	local _, _, price, stackCount, numAvailable, isPurchasable, _, extendedCost = api_GetMerchantItemInfo(self.rawMode, merchantItemIndex);
 	if(not isPurchasable) then return end
-	
-	local itemLink = GetMerchantItemLink(merchantItemIndex);
-	
-	self.minSplit = Addon:GetMinimumSplitSize(merchantItemIndex);
+
+	local itemLink = api_GetMerchantItemLink(self.rawMode, merchantItemIndex);
+
+	self.minSplit = Addon:GetMinimumSplitSize(merchantItemIndex, self.rawMode);
 	self.split = stackCount or 1;
-	
+
 	if(numAvailable < 0) then numAvailable = MAX_STACK_SIZE end
-	
+
 	local isUnique = select(8, Addon:GetItemTooltipInfo(itemLink));
 	if(isUnique) then return end
-		
-	local _, canAfford = Addon:CanAffordMerchantItem(merchantItemIndex, false);
+
+	local _, canAfford = Addon:CanAffordMerchantItem(merchantItemIndex, self.rawMode);
 	if(canAfford == 0) then return end
-	
+
 	self.numCanBuyMore = MAX_STACK_SIZE;
-	
-	local itemlink = GetMerchantItemLink(merchantItemIndex);
+
+	local itemlink = api_GetMerchantItemLink(self.rawMode, merchantItemIndex);
 	if(Addon:IsCurrencyItem(itemlink)) then
 		local _, info = Addon:GetCurrencyInfo(itemlink);
 		if(info and info.maxQuantity > 0) then
@@ -581,7 +625,7 @@ function MerchantItemButton_OnModifiedClick(self, button)
 				local maxStack = GetMerchantItemMaxStack(merchantItemIndex);
 				local _, _, price, stackCount, _, _, _, extendedCost = GetMerchantItemInfo(merchantItemIndex);
 				
-				VendorerStackSplitFrame:Open(merchantItemIndex, self);
+				DjinnisVendorerStackSplitFrame:Open(merchantItemIndex, self);
 				return;
 			end
 		else
@@ -592,7 +636,7 @@ function MerchantItemButton_OnModifiedClick(self, button)
 	end
 end
 
-function VendorerStackSplitMixin:OnChar(text)
+function DjinnisVendorerStackSplitMixin:OnChar(text)
 	if(self.purchasing) then return end
 	if(text < "0" or text > "9") then return end
 
@@ -609,7 +653,7 @@ function VendorerStackSplitMixin:OnChar(text)
 	self:Update();
 end
 
-function VendorerStackSplitMixin:OnKeyDown(key)
+function DjinnisVendorerStackSplitMixin:OnKeyDown(key)
 	if(key == "BACKSPACE" or key == "DELETE") then
 		if(not self.typing or self.split == 1) then
 			return;
@@ -698,19 +742,11 @@ end
 
 function Addon:CanAffordMerchantItem(merchantItemIndex, unfiltered)
 	if(not merchantItemIndex) then return false end
-	
-	local GetMerchantItemLink     = GetMerchantItemLink;
-	local GetMerchantItemInfo     = GetMerchantItemInfo;
-	local GetMerchantItemCostItem = GetMerchantItemCostItem;
-	local GetMerchantItemCostInfo = GetMerchantItemCostInfo;
-	
-	if(unfiltered) then
-		GetMerchantItemLink     = Addon.BlizzFunctions.GetMerchantItemLink;
-		GetMerchantItemInfo     = Addon.BlizzFunctions.GetMerchantItemInfo;
-		GetMerchantItemCostItem = Addon.BlizzFunctions.GetMerchantItemCostItem;
-		GetMerchantItemCostInfo = Addon.BlizzFunctions.GetMerchantItemCostInfo;
-	end
-	
+
+	local GetMerchantItemInfo     = function(idx) return api_GetMerchantItemInfo(unfiltered, idx) end;
+	local GetMerchantItemCostItem = function(idx, c) return api_GetMerchantItemCostItem(unfiltered, idx, c) end;
+	local GetMerchantItemCostInfo = function(idx) return api_GetMerchantItemCostInfo(unfiltered, idx) end;
+
 	local name, _, price, stackCount, numAvailable, isPurchasable, _, hasExtendedCost = GetMerchantItemInfo(merchantItemIndex);
 	if(not name) then return false end
 	
@@ -759,22 +795,22 @@ local function gcd(m, n)
     return m;
 end
 
-function Addon:GetMinimumSplitSize(merchantItemIndex)
+function Addon:GetMinimumSplitSize(merchantItemIndex, unfiltered)
 	if(not merchantItemIndex) then return 1 end
-	
-	local GetMerchantItemInfo     = GetMerchantItemInfo;
-	local GetMerchantItemCostItem = GetMerchantItemCostItem;
-	local GetMerchantItemCostInfo = GetMerchantItemCostInfo;
-	
+
+	local GetMerchantItemInfo     = function(idx) return api_GetMerchantItemInfo(unfiltered, idx) end;
+	local GetMerchantItemCostItem = function(idx, c) return api_GetMerchantItemCostItem(unfiltered, idx, c) end;
+	local GetMerchantItemCostInfo = function(idx) return api_GetMerchantItemCostInfo(unfiltered, idx) end;
+
 	local name, _, price, stackCount, _, _, _, hasExtendedCost = GetMerchantItemInfo(merchantItemIndex);
 	if(not name) then return 1 end
-	
+
 	stackCount = stackCount or 1;
 	if(stackCount <= 1) then return 1 end
-	
+
 	-- Items that only cost gold can be always split to 1 unit
 	if(not hasExtendedCost and price) then return 1 end
-	
+
 	local minimumCurrencyAmount = 1;
 	local currencyCount = GetMerchantItemCostInfo(merchantItemIndex);
 	for index = 1, currencyCount do

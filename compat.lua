@@ -1,5 +1,5 @@
 -- Midnight (12.0) API compatibility shims.
--- Restores classic global names / signatures that Vendorer's original code uses.
+-- Restores classic global names / signatures that DjinnisVendorer's original code uses.
 
 if C_Item then
 	GetItemInfo          = C_Item.GetItemInfo

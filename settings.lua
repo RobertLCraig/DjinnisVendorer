@@ -1,5 +1,5 @@
 ------------------------------------------------------------
--- Vendorer by Sonaza (https://sonaza.com)
+-- DjinnisVendorer by Djinni, Originally created by Sonaza (https://sonaza.com) as "Vendorer"
 -- Licensed under MIT License
 -- See attached license text in file LICENSE
 ------------------------------------------------------------
@@ -7,9 +7,9 @@
 local ADDON_NAME, Addon = ...;
 local _;
 
-SLASH_VENDORER1 = "/vendorer";
-SLASH_VENDORER2 = "/vd";
-SlashCmdList["VENDORER"] = function(params)
+SLASH_DJINNISVENDORER1 = "/djinnisvendorer";
+SLASH_DJINNISVENDORER2 = "/djv";
+SlashCmdList["DJINNISVENDORER"] = function(params)
 	Addon:HandleConsole(params, strsplit(" ", strtrim(params)));
 end
 
@@ -56,16 +56,16 @@ function Addon:HandleConsole(params, action, ...)
 		Addon:AddMessage("EnhanceQoL Merchant conflict warning re-enabled. The popup will appear next time you open a merchant if the submodule is active.");
 	else
 		Addon:AddMessage("|cffffd200Usage|r");
-		Addon:AddShortMessage("You can access Vendorer slash commands by typing |cffffd200/vendorer|r or |cffffd200/vd|r.");
-		Addon:AddShortMessage("|cffffd200/vendorer|r ignore |cffaaaaaa[item]|r");
+		Addon:AddShortMessage("You can access DjinnisVendorer slash commands by typing |cffffd200/djinnisvendorer|r or |cffffd200/vd|r.");
+		Addon:AddShortMessage("|cffffd200/djinnisvendorer|r ignore |cffaaaaaa[item]|r");
 		Addon:AddShortMessage("  Opens ignored items window or add/remove item from the ignore list.");
-		Addon:AddShortMessage("|cffffd200/vendorer|r junk |cffaaaaaa[item]|r");
+		Addon:AddShortMessage("|cffffd200/djinnisvendorer|r junk |cffaaaaaa[item]|r");
 		Addon:AddShortMessage("  Opens junk items window or add/remove item from the junk list.");
-		Addon:AddShortMessage("|cffffd200/vendorer|r autosell|r");
+		Addon:AddShortMessage("|cffffd200/djinnisvendorer|r autosell|r");
 		Addon:AddShortMessage("  Toggles auto sell. Currently %s.", Addon:GetToggleStatusText(Addon.db.global.AutoSellJunk));
-		Addon:AddShortMessage("|cffffd200/vendorer|r autorepair|r");
+		Addon:AddShortMessage("|cffffd200/djinnisvendorer|r autorepair|r");
 		Addon:AddShortMessage("  Toggles auto repair. Currently %s.", Addon:GetToggleStatusText(Addon.db.global.AutoRepair));
-		Addon:AddShortMessage("|cffffd200/vendorer|r smartrepair|r");
+		Addon:AddShortMessage("|cffffd200/djinnisvendorer|r smartrepair|r");
 		Addon:AddShortMessage("  Toggles smart auto repair. Currently %s. Only works when auto repair is enabled.", Addon:GetToggleStatusText(Addon.db.global.SmartAutoRepair));
 	end
 	
@@ -90,7 +90,7 @@ function Addon:OpenSettingsMenu(anchor)
 
 	-- Legacy fallback (pre-11.0)
 	if(not Addon._legacyDropDownFrame) then
-		Addon._legacyDropDownFrame = CreateFrame("Frame", "VendorerSettingsContextMenuFrame", anchor, "UIDropDownMenuTemplate");
+		Addon._legacyDropDownFrame = CreateFrame("Frame", "DjinnisVendorerSettingsContextMenuFrame", anchor, "UIDropDownMenuTemplate");
 	end
 	Addon._legacyDropDownFrame:SetPoint("BOTTOM", anchor, "CENTER", 0, 5);
 	EasyMenu(Addon:GetMenuData(), Addon._legacyDropDownFrame, "cursor", 0, 0, "MENU", 2.5);
@@ -194,7 +194,7 @@ function Addon:GetMenuData()
 	
 	local data = {
 		{
-			text = "Vendorer Options", isTitle = true, notCheckable = true,
+			text = "DjinnisVendorer Options", isTitle = true, notCheckable = true,
 		},
 		{
 			text = "Highlight own armor types",
@@ -250,7 +250,7 @@ function Addon:GetMenuData()
 			checked = function() return self.db.global.UseTooltipSearch; end,
 			isNotRadio = true,
 			tooltipTitle = "Enable search from tooltip text",
-			tooltipText = "Allow Vendorer to search item tooltip text. This allows for very powerful filtering but is also very resource intensive and may cause problems.",
+			tooltipText = "Allow DjinnisVendorer to search item tooltip text. This allows for very powerful filtering but is also very resource intensive and may cause problems.",
 			tooltipOnButton = 1,
 			keepShownOnClick = 1,
 		},
@@ -301,6 +301,73 @@ function Addon:GetMenuData()
 			keepShownOnClick = 1,
 		},
 		{
+			text = "Vertical list view",
+			func = function()
+				self.db.global.ListViewEnabled = not self.db.global.ListViewEnabled;
+				if(MerchantFrame and MerchantFrame:IsShown() and MerchantFrame.selectedTab == 1) then
+					MerchantFrame_Update();
+				end
+			end,
+			checked = function() return self.db.global.ListViewEnabled; end,
+			isNotRadio = true,
+			tooltipTitle = "Vertical list view",
+			tooltipText = "Replaces the merchant grid with a scrollable list of every item the merchant offers.",
+			tooltipOnButton = 1,
+			keepShownOnClick = 1,
+		},
+		{
+			text = "List filter behaviour",
+			notCheckable = true,
+			hasArrow = true,
+			menuList = {
+				{
+					text = "Grey out non-matches",
+					isRadio = true,
+					checked = function() return not self.db.global.ListViewHideNonMatches; end,
+					func = function()
+						self.db.global.ListViewHideNonMatches = false;
+						if(Addon.RefreshListView) then Addon:RefreshListView() end
+					end,
+				},
+				{
+					text = "Hide non-matches",
+					isRadio = true,
+					checked = function() return self.db.global.ListViewHideNonMatches; end,
+					func = function()
+						self.db.global.ListViewHideNonMatches = true;
+						if(Addon.RefreshListView) then Addon:RefreshListView() end
+					end,
+				},
+			},
+		},
+		{
+			text = "List sort order",
+			notCheckable = true,
+			hasArrow = true,
+			menuList = (function()
+				local options = {
+					{ key = "default", label = "Merchant order" },
+					{ key = "name",    label = "Name (A-Z)" },
+					{ key = "price",   label = "Price (low to high)" },
+					{ key = "quality", label = "Quality (high to low)" },
+				};
+				local items = {};
+				for _, opt in ipairs(options) do
+					local key, label = opt.key, opt.label;
+					tinsert(items, {
+						text = label,
+						isRadio = true,
+						checked = function() return (self.db.global.ListViewSortKey or "default") == key; end,
+						func = function()
+							self.db.global.ListViewSortKey = key;
+							if(Addon.RefreshListView) then Addon:RefreshListView() end
+						end,
+					});
+				end
+				return items;
+			end)(),
+		},
+		{
 			text = "Remember search text",
 			notCheckable = true,
 			hasArrow = true,
@@ -323,8 +390,8 @@ function Addon:GetMenuData()
 						self.db.global.SearchPersistence = "session";
 						self.db.global.SavedSearchText = "";
 						-- seed session from current edit box so it sticks immediately
-						if VendorerFilterEditBox then
-							Addon.SessionFilterText = string.trim(string.lower(VendorerFilterEditBox:GetText() or ""));
+						if DjinnisVendorerFilterEditBox then
+							Addon.SessionFilterText = string.trim(string.lower(DjinnisVendorerFilterEditBox:GetText() or ""));
 						end
 					end,
 				},
@@ -334,8 +401,8 @@ function Addon:GetMenuData()
 					checked = function() return self.db.global.SearchPersistence == "account"; end,
 					func = function()
 						self.db.global.SearchPersistence = "account";
-						if VendorerFilterEditBox then
-							self.db.global.SavedSearchText = string.trim(string.lower(VendorerFilterEditBox:GetText() or ""));
+						if DjinnisVendorerFilterEditBox then
+							self.db.global.SavedSearchText = string.trim(string.lower(DjinnisVendorerFilterEditBox:GetText() or ""));
 						end
 					end,
 				},
@@ -360,13 +427,13 @@ function Addon:GetMenuData()
 			func = function()
 				self.db.global.UseImprovedStackSplit = not self.db.global.UseImprovedStackSplit;
 				-- Close both split frames just in case
-				VendorerStackSplitFrame:Cancel();
+				DjinnisVendorerStackSplitFrame:Cancel();
 				if StackSplitFrame and StackSplitFrame:IsShown() then StackSplitFrame:Hide(); end
 			end,
 			checked = function() return self.db.global.UseImprovedStackSplit; end,
 			isNotRadio = true,
 			tooltipTitle = "Use improved stack purchasing",
-			tooltipText = "When buying in bulk use Vendorer's replacement window which allows buying several stacks at once among other things.",
+			tooltipText = "When buying in bulk use DjinnisVendorer's replacement window which allows buying several stacks at once among other things.",
 			tooltipOnButton = 1,
 			keepShownOnClick = 1,
 		},
@@ -378,7 +445,7 @@ function Addon:GetMenuData()
 			checked = function() return self.db.global.UseSafePurchase; end,
 			isNotRadio = true,
 			tooltipTitle = "Throttle purchases to a safe interval",
-			tooltipText = "If you encounter errors when trying to purchase items more than one stack at a time try enabling this option. Vendorer will throttle item purchases to a slower rate.",
+			tooltipText = "If you encounter errors when trying to purchase items more than one stack at a time try enabling this option. DjinnisVendorer will throttle item purchases to a slower rate.",
 			tooltipOnButton = 1,
 			keepShownOnClick = 1,
 		},
@@ -390,11 +457,11 @@ function Addon:GetMenuData()
 			func = function()
 				self.db.global.DestroyUnsellables = not self.db.global.DestroyUnsellables;
 				if(not self.db.global.DestroyUnsellables) then
-					VendorerSellJunkButton:SetText(_G["VENDORER_SELL_JUNK_ITEMS_TEXT"]);
-					VendorerSellUnusablesButton:SetText(_G["VENDORER_SELL_UNUSABLE_ITEMS_TEXT"]);
+					DjinnisVendorerSellJunkButton:SetText(_G["DJINNISVENDORER_SELL_JUNK_ITEMS_TEXT"]);
+					DjinnisVendorerSellUnusablesButton:SetText(_G["DJINNISVENDORER_SELL_UNUSABLE_ITEMS_TEXT"]);
 				else
-					VendorerSellJunkButton:SetText(_G["VENDORER_SELL_JUNK_ITEMS_TEXT2"]);
-					VendorerSellUnusablesButton:SetText(_G["VENDORER_SELL_UNUSABLE_ITEMS_TEXT2"]);
+					DjinnisVendorerSellJunkButton:SetText(_G["DJINNISVENDORER_SELL_JUNK_ITEMS_TEXT2"]);
+					DjinnisVendorerSellUnusablesButton:SetText(_G["DJINNISVENDORER_SELL_UNUSABLE_ITEMS_TEXT2"]);
 				end
 			end,
 			checked = function() return self.db.global.DestroyUnsellables; end,
@@ -428,7 +495,7 @@ function Addon:GetMenuData()
 					end
 				end
 				
-				if(VendorerItemListsFrame:IsVisible() and VendorerItemListsFrame.index == 1) then
+				if(DjinnisVendorerItemListsFrame:IsVisible() and DjinnisVendorerItemListsFrame.index == 1) then
 					Addon:OpenIgnoredItemsListsFrame();
 				end
 			end,
@@ -457,7 +524,7 @@ function Addon:GetMenuData()
 					end
 				end
 				
-				if(VendorerItemListsFrame:IsVisible() and VendorerItemListsFrame.index == 2) then
+				if(DjinnisVendorerItemListsFrame:IsVisible() and DjinnisVendorerItemListsFrame.index == 2) then
 					Addon:OpenJunkItemsListsFrame();
 				end
 			end,
@@ -481,7 +548,7 @@ function Addon:GetMenuData()
 	return data;
 end
 
-function VendorerSettingsButton_OnClick(self)
+function DjinnisVendorerSettingsButton_OnClick(self)
 	if MenuUtil and MenuUtil.CreateContextMenu then
 		Addon:OpenSettingsMenu(self);
 		return;

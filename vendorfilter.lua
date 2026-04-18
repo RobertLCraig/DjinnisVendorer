@@ -1,5 +1,5 @@
 ------------------------------------------------------------
--- Vendorer by Sonaza (https://sonaza.com)
+-- DjinnisVendorer by Djinni, Originally created by Sonaza (https://sonaza.com) as "Vendorer"
 -- Licensed under MIT License
 -- See attached license text in file LICENSE
 ------------------------------------------------------------
@@ -19,6 +19,8 @@ Addon.BlizzFunctions = {
 	GetMerchantItemLink             = _G.GetMerchantItemLink,
 	GetMerchantItemMaxStack         = _G.GetMerchantItemMaxStack,
 	GetMerchantNumItems             = _G.GetMerchantNumItems,
+	C_MerchantFrame_GetItemInfo     = C_MerchantFrame and C_MerchantFrame.GetItemInfo,
+	C_MerchantFrame_GetNumItems     = C_MerchantFrame and C_MerchantFrame.GetNumItems,
 	GameTooltip_SetMerchantItem     = GameTooltip.SetMerchantItem,
 	GameTooltip_SetMerchantCostItem = GameTooltip.SetMerchantCostItem,
 };
@@ -45,7 +47,8 @@ local function _GetMerchantItemInfo(index)
 	if not info then return end
 	return info.name, info.texture, info.price, info.stackCount,
 		info.numAvailable, info.isPurchasable, info.isUsable,
-		info.hasExtendedCost, info.currencyID;
+		info.hasExtendedCost, info.currencyID,
+		info.showNonrefundablePrompt;
 end
 
 local _GameTooltip_SetMerchantItem = GameTooltip.SetMerchantItem;
@@ -319,16 +322,16 @@ function Addon:MakeTooltipString(itemLink)
 	if(not itemLink) then return "" end
 	if(cachedStrings[itemLink]) then return cachedStrings[itemLink] end
 	
-	VendorerTooltip:Hide();
-	VendorerTooltip:SetOwner(UIParent, "ANCHOR_NONE", 99999, 0);
-	VendorerTooltip:SetHyperlink(itemLink);
-	local numLines = VendorerTooltip:NumLines();
+	DjinnisVendorerTooltip:Hide();
+	DjinnisVendorerTooltip:SetOwner(UIParent, "ANCHOR_NONE", 99999, 0);
+	DjinnisVendorerTooltip:SetHyperlink(itemLink);
+	local numLines = DjinnisVendorerTooltip:NumLines();
 	
 	local string = "";
 	
 	for line = 2, numLines do
-		local left = _G["VendorerTooltipTextLeft" .. line];
-		local right = _G["VendorerTooltipTextRight" .. line];
+		local left = _G["DjinnisVendorerTooltipTextLeft" .. line];
+		local right = _G["DjinnisVendorerTooltipTextRight" .. line];
 		
 		if(left and left:GetText()) then
 			string = string .. " " .. strtrim(left:GetText());
@@ -600,6 +603,41 @@ function Addon:GetUnfilteredMerchantNumItems()
 	return _GetMerchantNumItems();
 end
 
+function Addon:GetUnfilteredMerchantItemLink(index)
+	if(not index) then return end
+	return _GetMerchantItemLink(index);
+end
+
+function Addon:GetUnfilteredMerchantItemInfo(index)
+	if(not index) then return end
+	return _GetMerchantItemInfo(index);
+end
+
+function Addon:GetUnfilteredMerchantCostInfo(index)
+	if(not index) then return end
+	return _GetMerchantItemCostInfo(index);
+end
+
+function Addon:GetUnfilteredMerchantCostItem(index, costIndex)
+	if(not index) then return end
+	return _GetMerchantItemCostItem(index, costIndex);
+end
+
+function Addon:GetUnfilteredMerchantItemMaxStack(index)
+	if(not index) then return end
+	return _GetMerchantItemMaxStack(index);
+end
+
+function Addon:RawBuyMerchantItem(index, amount)
+	if(not index) then return end
+	return _BuyMerchantItem(index, amount);
+end
+
+function Addon:RawSetTooltipMerchantItem(tooltip, index)
+	if(not index or not tooltip) then return end
+	return _GameTooltip_SetMerchantItem(tooltip, index);
+end
+
 function Addon:ResetFilteredItems()
 	FilteredMerchantItems = {};
 end
@@ -621,14 +659,14 @@ function Addon:UpdateMerchantItems()
 end
 
 function Addon:ResetFilter(prefill)
-	VendorerFilterEditBox:SetText(prefill or "");
-	SearchBoxTemplate_OnTextChanged(VendorerFilterEditBox);
+	DjinnisVendorerFilterEditBox:SetText(prefill or "");
+	SearchBoxTemplate_OnTextChanged(DjinnisVendorerFilterEditBox);
 	Addon:RefreshFilter();
 end
 
 function Addon:SetFilter(text)
 	if(IsControlKeyDown()) then
-		Addon:ResetFilter(strtrim(VendorerFilterEditBox:GetText() .. " " .. text));
+		Addon:ResetFilter(strtrim(DjinnisVendorerFilterEditBox:GetText() .. " " .. text));
 	else
 		Addon:ResetFilter(text);
 	end
@@ -639,7 +677,7 @@ function Addon:ResetAllFilters()
 	FilteredMerchantItems = {};
 end
 
-function Vendorer_OnSearchTextChanged(self)
+function DjinnisVendorer_OnSearchTextChanged(self)
 	SearchBoxTemplate_OnTextChanged(self);
 	Addon:RefreshFilter();
 end
@@ -650,13 +688,13 @@ function Addon:RefreshFilter(purge_cache)
 		collectgarbage("collect");
 	end
 	
-	if(VendorerStackSplitFrame:IsPurchasing()) then
-		VendorerStackSplitFrame:CancelPurchase();
+	if(DjinnisVendorerStackSplitFrame:IsPurchasing()) then
+		DjinnisVendorerStackSplitFrame:CancelPurchase();
 		Addon:AddMessage("Pending bulk purchase canceled due to filtering change.");
 	end
 	
 	local oldfilter = Addon.FilterText;
-	Addon.FilterText = string.trim(string.lower(VendorerFilterEditBox:GetText()));
+	Addon.FilterText = string.trim(string.lower(DjinnisVendorerFilterEditBox:GetText()));
 
 	if(Addon.FilterText ~= "" or oldfilter ~= "") then
 		Addon.UpdatedFilteringTime = GetTime();
@@ -669,8 +707,8 @@ function Addon:RefreshFilter(purge_cache)
 end
 
 hooksecurefunc("SetMerchantFilter", function()
-	if(VendorerStackSplitFrame:IsPurchasing()) then
-		VendorerStackSplitFrame:CancelPurchase();
+	if(DjinnisVendorerStackSplitFrame:IsPurchasing()) then
+		DjinnisVendorerStackSplitFrame:CancelPurchase();
 		Addon:AddMessage("Pending bulk purchase canceled due to filtering change.");
 	end
 
@@ -688,19 +726,21 @@ hooksecurefunc("MerchantFrame_Update", function()
 		if filterDropdown then
 			filterDropdown:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", -35, -28);
 		end
-		VendorerToggleExtensionFrameButtons:Show();
+		DjinnisVendorerToggleExtensionFrameButtons:Show();
+		if(Addon.ApplyListViewVisibility) then Addon:ApplyListViewVisibility() end
 	else
 		MerchantFrame_UpdateBuybackInfo();
 		Addon:HideExtensionPanel();
 		if filterDropdown then
 			filterDropdown:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", 0, -28);
 		end
-		VendorerToggleExtensionFrameButtons:Hide();
-		VendorerStackSplitFrame:Cancel();
+		DjinnisVendorerToggleExtensionFrameButtons:Hide();
+		DjinnisVendorerStackSplitFrame:Cancel();
+		if(Addon.ApplyListViewVisibility) then Addon:ApplyListViewVisibility() end
 	end
 end);
 
-function VendorerFilterEditBox_OnEnter(self)
+function DjinnisVendorerFilterEditBox_OnEnter(self)
 	self.hovering = true;
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 	GameTooltip:AddLine("Filter Merchant Items");
@@ -708,80 +748,80 @@ function VendorerFilterEditBox_OnEnter(self)
 	GameTooltip:Show();
 end
 
-function VendorerFilterEditBox_OnLeave(self)
+function DjinnisVendorerFilterEditBox_OnLeave(self)
 	GameTooltip:Hide();
 	self.hovering = false;
 end
 
 local NEW_FEATURE_ICON = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:12:12:0:0:|t";
-function VendorerFilteringButton_OnEnter()
+function DjinnisVendorerFilteringButton_OnEnter()
 	if(DropDownList1:IsVisible()) then return end
 	
-	VendorerHintTooltip:ClearLines();
+	DjinnisVendorerHintTooltip:ClearLines();
 	
-	VendorerHintTooltip:SetPoint("TOPLEFT", VendorerFilteringButton, "TOPRIGHT", -7, 70);
-	VendorerHintTooltip:SetOwner(VendorerFilteringButton, "ANCHOR_PRESERVE");
+	DjinnisVendorerHintTooltip:SetPoint("TOPLEFT", DjinnisVendorerFilteringButton, "TOPRIGHT", -7, 70);
+	DjinnisVendorerHintTooltip:SetOwner(DjinnisVendorerFilteringButton, "ANCHOR_PRESERVE");
 	
-	VendorerHintTooltip:AddLine("|cffffffffVendorer Filtering Tips|r");
+	DjinnisVendorerHintTooltip:AddLine("|cffffffffDjinnisVendorer Filtering Tips|r");
 	if(Addon.db.global.UseTooltipSearch) then
-		VendorerHintTooltip:AddLine("You can search by item name, rarity, type, slot, required currency or tooltip text.", nil, nil, nil, true);
+		DjinnisVendorerHintTooltip:AddLine("You can search by item name, rarity, type, slot, required currency or tooltip text.", nil, nil, nil, true);
 	else
-		VendorerHintTooltip:AddLine("You can search by item name, rarity, type, slot or required currency. Searching by tooltip text is currently disabled.", nil, nil, nil, true);
+		DjinnisVendorerHintTooltip:AddLine("You can search by item name, rarity, type, slot or required currency. Searching by tooltip text is currently disabled.", nil, nil, nil, true);
 	end
-	VendorerHintTooltip:AddLine(" ");
-	VendorerHintTooltip:AddLine("You can also search for phrases by putting the words in quotes. The results will only include items with the words in the same order as the ones inside the quotes.", nil, nil, nil, true);
-	VendorerHintTooltip:AddLine(" ");
-	VendorerHintTooltip:AddLine("Any and all filters can also be negated by prefixing the query word or phrase with |cffffffff! (an exclamation mark)|r.", nil, nil, nil, true);
-	VendorerHintTooltip:AddLine(" ");
-	VendorerHintTooltip:AddLine("By prefixing a word or a phrase with |cffffffff+ (a plus)|r you can search for exact matches.", nil, nil, nil, true);
-	VendorerHintTooltip:AddLine(" ");
+	DjinnisVendorerHintTooltip:AddLine(" ");
+	DjinnisVendorerHintTooltip:AddLine("You can also search for phrases by putting the words in quotes. The results will only include items with the words in the same order as the ones inside the quotes.", nil, nil, nil, true);
+	DjinnisVendorerHintTooltip:AddLine(" ");
+	DjinnisVendorerHintTooltip:AddLine("Any and all filters can also be negated by prefixing the query word or phrase with |cffffffff! (an exclamation mark)|r.", nil, nil, nil, true);
+	DjinnisVendorerHintTooltip:AddLine(" ");
+	DjinnisVendorerHintTooltip:AddLine("By prefixing a word or a phrase with |cffffffff+ (a plus)|r you can search for exact matches.", nil, nil, nil, true);
+	DjinnisVendorerHintTooltip:AddLine(" ");
 	
-	VendorerHintTooltip:AddLine("|cffffffffMagic words|r");
+	DjinnisVendorerHintTooltip:AddLine("|cffffffffMagic words|r");
 	if(not CanIMogIt) then
-		VendorerHintTooltip:AddLine("Predefined filters: |cffffffffusable, equippable, purchasable, unknown, available, canafford|r. Additional transmog filters exist if the dependency |cffffffffCan I Mog It|r is installed.", nil, nil, nil, true);
+		DjinnisVendorerHintTooltip:AddLine("Predefined filters: |cffffffffusable, equippable, purchasable, unknown, available, canafford|r. Additional transmog filters exist if the dependency |cffffffffCan I Mog It|r is installed.", nil, nil, nil, true);
 	else
-		VendorerHintTooltip:AddLine("Predefined filters: |cffffffffusable, equippable, purchasable, unknown, available, canafford, transmogable, unknowntransmog|r.", nil, nil, nil, true);
+		DjinnisVendorerHintTooltip:AddLine("Predefined filters: |cffffffffusable, equippable, purchasable, unknown, available, canafford, transmogable, unknowntransmog|r.", nil, nil, nil, true);
 	end
 	
-	VendorerHintTooltip:AddLine(" ");
-	VendorerHintTooltip:AddLine("|cffffffffBy Item ID|r");
-	VendorerHintTooltip:AddLine("Prefix a number with letters |cffffffffid|r. For example |cffffffffid|cfff361946948|r.", nil, nil, nil, true); 
-	VendorerHintTooltip:AddLine(" ");
-	VendorerHintTooltip:AddLine("|cffffffffBy Required Level|r");
-	VendorerHintTooltip:AddLine("Prefix a number with the letter |cffffffffr|r. For example |cffffffffr|cfff3619492|r.", nil, nil, nil, true);
-	VendorerHintTooltip:AddLine(" ");
-	VendorerHintTooltip:AddLine("|cffffffffBy Item Level|r");
-	VendorerHintTooltip:AddLine("Prefix a number with the letter |cffffffffi|r. For example |cffffffffi|cfff36194200|r.", nil, nil, nil, true);
-	VendorerHintTooltip:AddLine(" ");
-	VendorerHintTooltip:AddLine("|cffffffffBy Price|r");
-	VendorerHintTooltip:AddLine("Enter a price value formatted like |cffffffff12|rg|cffffffff34|rs|cffffffff56|rc.", nil, nil, nil, true);
-	VendorerHintTooltip:AddLine(" ");
-	VendorerHintTooltip:AddLine("|cffffffffSearching for Ranges of Values|r");
-	VendorerHintTooltip:AddLine("Search values can be prefixed with |cffffffff>, >=, <|r and |cffffffff<=|r to search for ranges of values.", nil, nil, nil, true);
-	VendorerHintTooltip:AddLine(" ");
-	VendorerHintTooltip:AddLine("|cffffffffFiltering Examples|r");
-	VendorerHintTooltip:AddLine("|cffffffff>=r|cfff3619490|r would find all items that require level higher than or equal to 90.", nil, nil, nil, true);
-	VendorerHintTooltip:AddLine(" ");
-	VendorerHintTooltip:AddLine("|cffffffff>=|cfff36194250g|r |cffffffff<=|cfff36194500g|r would find all items that cost between 250 and 500 gold.", nil, nil, nil, true);
-	VendorerHintTooltip:AddLine(" ");
-	VendorerHintTooltip:AddLine("|cffffffff>=|cfff36194rare|r would find all items that are rare or better.", nil, nil, nil, true);
+	DjinnisVendorerHintTooltip:AddLine(" ");
+	DjinnisVendorerHintTooltip:AddLine("|cffffffffBy Item ID|r");
+	DjinnisVendorerHintTooltip:AddLine("Prefix a number with letters |cffffffffid|r. For example |cffffffffid|cfff361946948|r.", nil, nil, nil, true); 
+	DjinnisVendorerHintTooltip:AddLine(" ");
+	DjinnisVendorerHintTooltip:AddLine("|cffffffffBy Required Level|r");
+	DjinnisVendorerHintTooltip:AddLine("Prefix a number with the letter |cffffffffr|r. For example |cffffffffr|cfff3619492|r.", nil, nil, nil, true);
+	DjinnisVendorerHintTooltip:AddLine(" ");
+	DjinnisVendorerHintTooltip:AddLine("|cffffffffBy Item Level|r");
+	DjinnisVendorerHintTooltip:AddLine("Prefix a number with the letter |cffffffffi|r. For example |cffffffffi|cfff36194200|r.", nil, nil, nil, true);
+	DjinnisVendorerHintTooltip:AddLine(" ");
+	DjinnisVendorerHintTooltip:AddLine("|cffffffffBy Price|r");
+	DjinnisVendorerHintTooltip:AddLine("Enter a price value formatted like |cffffffff12|rg|cffffffff34|rs|cffffffff56|rc.", nil, nil, nil, true);
+	DjinnisVendorerHintTooltip:AddLine(" ");
+	DjinnisVendorerHintTooltip:AddLine("|cffffffffSearching for Ranges of Values|r");
+	DjinnisVendorerHintTooltip:AddLine("Search values can be prefixed with |cffffffff>, >=, <|r and |cffffffff<=|r to search for ranges of values.", nil, nil, nil, true);
+	DjinnisVendorerHintTooltip:AddLine(" ");
+	DjinnisVendorerHintTooltip:AddLine("|cffffffffFiltering Examples|r");
+	DjinnisVendorerHintTooltip:AddLine("|cffffffff>=r|cfff3619490|r would find all items that require level higher than or equal to 90.", nil, nil, nil, true);
+	DjinnisVendorerHintTooltip:AddLine(" ");
+	DjinnisVendorerHintTooltip:AddLine("|cffffffff>=|cfff36194250g|r |cffffffff<=|cfff36194500g|r would find all items that cost between 250 and 500 gold.", nil, nil, nil, true);
+	DjinnisVendorerHintTooltip:AddLine(" ");
+	DjinnisVendorerHintTooltip:AddLine("|cffffffff>=|cfff36194rare|r would find all items that are rare or better.", nil, nil, nil, true);
 	
-	VendorerHintTooltip:SetClampedToScreen(true);
-	VendorerHintTooltip:SetMinimumWidth(270);
-	VendorerHintTooltip:SetWidth(270);
-	VendorerHintTooltip:SetScale(0.9);
-	VendorerHintTooltip:Show();
+	DjinnisVendorerHintTooltip:SetClampedToScreen(true);
+	DjinnisVendorerHintTooltip:SetMinimumWidth(270);
+	DjinnisVendorerHintTooltip:SetWidth(270);
+	DjinnisVendorerHintTooltip:SetScale(0.9);
+	DjinnisVendorerHintTooltip:Show();
 end
 
-function VendorerFilteringButton_OnLeave()
-	VendorerHintTooltip:Hide();
+function DjinnisVendorerFilteringButton_OnLeave()
+	DjinnisVendorerHintTooltip:Hide();
 end
 
-function VendorerFilteringButton_OnClick(self, button)
-	VendorerHintTooltip:Hide();
+function DjinnisVendorerFilteringButton_OnClick(self, button)
+	DjinnisVendorerHintTooltip:Hide();
 	Addon:OpenQuickFiltersMenu(self);
 	
-	VendorerFilteringButtonAlert:Hide();
+	DjinnisVendorerFilteringButtonAlert:Hide();
 	Addon.db.global.FilteringButtonAlertShown = true;
 end
 
@@ -806,7 +846,7 @@ end
 function Addon:GetQuickFiltersMenuData()
 	local data = {
 		{
-			text = "Vendorer Quick Filters", isTitle = true, notCheckable = true,
+			text = "DjinnisVendorer Quick Filters", isTitle = true, notCheckable = true,
 		},
 		{
 			text = "Magic Words",

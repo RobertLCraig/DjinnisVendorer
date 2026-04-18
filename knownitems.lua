@@ -1,5 +1,5 @@
 ------------------------------------------------------------
--- Vendorer by Sonaza (https://sonaza.com)
+-- DjinnisVendorer by Djinni, Originally created by Sonaza (https://sonaza.com) as "Vendorer"
 -- Licensed under MIT License
 -- See attached license text in file LICENSE
 ------------------------------------------------------------
@@ -51,12 +51,12 @@ function Addon:IsItemKnown(itemLink)
 		return false;
 	end
 
-	VendorerTooltip:SetOwner(UIParent, "ANCHOR_NONE");
-	VendorerTooltip:ClearLines();
-	VendorerTooltip:SetHyperlink(itemLink);
+	DjinnisVendorerTooltip:SetOwner(UIParent, "ANCHOR_NONE");
+	DjinnisVendorerTooltip:ClearLines();
+	DjinnisVendorerTooltip:SetHyperlink(itemLink);
 
-	for line = 2, VendorerTooltip:NumLines() do
-		local text = _G["VendorerTooltipTextLeft" .. line]:GetText();
+	for line = 2, DjinnisVendorerTooltip:NumLines() do
+		local text = _G["DjinnisVendorerTooltipTextLeft" .. line]:GetText();
 		if(text) then
 			if(text == ITEM_SPELL_KNOWN or strmatch(text, PET_KNOWN_PATTERN)) then
 				cached[itemLink] = true;

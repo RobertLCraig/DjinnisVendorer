@@ -1,12 +1,12 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
-	<Script file="VendorerItemListsFrame.lua"/>
+	<Script file="DjinnisVendorerItemListsFrame.lua"/>
 	
-	<Button name="VendorerItemListItemButtonTemplate" virtual="true">
+	<Button name="DjinnisVendorerItemListItemButtonTemplate" virtual="true">
 		<Size x="296" y="33"/>
 		<Layers>
 			<Layer level="OVERLAY">
-				<FontString name="$parentName" inherits="VendorerButtonFont" justifyH="LEFT" parentKey="name">
+				<FontString name="$parentName" inherits="DjinnisVendorerButtonFont" justifyH="LEFT" parentKey="name">
 					<Size x="0" y="12"/>
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="$parent" x="36" y="0"/>
@@ -42,21 +42,21 @@
 					</Layer>
 				</Layers>
 				<Frames>
-					<Frame parentKey="rarityBorder" inherits="VendorerMerchantItemRarityBorderTemplate">
+					<Frame parentKey="rarityBorder" inherits="DjinnisVendorerMerchantItemRarityBorderTemplate">
 						<Anchors>
 							<Anchor point="CENTER" relativeTo="$parent"/>
 						</Anchors>
 					</Frame>
 				</Frames>
 			</Frame>
-			<Button name="$parentRemoveItem" inherits="VendorerPanelButtonTemplate" text="Remove">
+			<Button name="$parentRemoveItem" inherits="DjinnisVendorerPanelButtonTemplate" text="Remove">
 				<Size x="64" y="28"/>
 				<Anchors>
 					<Anchor point="RIGHT" relativePoint="RIGHT" relativeTo="$parent" x="-4" y="0"/>
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						VendorerItemListItemButtonRemove_OnClick(self:GetParent(), button);
+						DjinnisVendorerItemListItemButtonRemove_OnClick(self:GetParent(), button);
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -71,7 +71,7 @@
 			<OnLoad>
 				self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
 			</OnLoad>
-			<OnEnter function="VendorerItemListItemButton_OnEnter"/>
+			<OnEnter function="DjinnisVendorerItemListItemButton_OnEnter"/>
 			<OnLeave>
 				GameTooltip:Hide();
 			</OnLeave>
@@ -79,7 +79,7 @@
 		</Scripts>
 	</Button>
 	
-	<Frame name="VendorerItemListsFrame" toplevel="true" parent="UIParent" movable="true" enableMouse="true" inherits="ButtonFrameTemplate" hidden="true">
+	<Frame name="DjinnisVendorerItemListsFrame" toplevel="true" parent="UIParent" movable="true" enableMouse="true" inherits="ButtonFrameTemplate" hidden="true">
 		<Size x="336" y="444"/>
 		<Anchors>
 			<Anchor point="TOPLEFT" relativeTo="MerchantFrame" relativePoint="TOPRIGHT"/>
@@ -95,7 +95,7 @@
 				</Texture>
 			</Layer>
 			<Layer level="BORDER">
-				<FontString name="$parentTitle" inherits="GameFontHighlight" text="Vendorer">
+				<FontString name="$parentTitle" inherits="GameFontHighlight" text="DjinnisVendorer">
 					<Anchors>
 						<Anchor point="TOP" relativeTo="$parent" relativePoint="TOP" x="10" y="-5"/>
 					</Anchors>
@@ -145,15 +145,15 @@
 					</Slider>
 				</Frames>
 			</ScrollFrame>
-			<Button name="VendorerItemListsDragReceiver" frameStrata="HIGH" enableMouse="true" setAllPoints="true" hidden="true">
+			<Button name="DjinnisVendorerItemListsDragReceiver" frameStrata="HIGH" enableMouse="true" setAllPoints="true" hidden="true">
 				<Layers>
 					<Layer level="BACKGROUND">
-						<Texture file="Interface\AddOns\Vendorer\media\ShadowBlob" setAllPoints="true">
+						<Texture file="Interface\AddOns\DjinnisVendorer\media\ShadowBlob" setAllPoints="true">
 							<Color r="1" g="1" b="1" a="0.65"/>
 						</Texture>
 					</Layer>
 					<Layer level="BORDER">
-						<FontString name="$parentHelp" inherits="VendorerBigFont" text="VENDORER_BIG_DRAG_ITEM_HERE_TEXT">
+						<FontString name="$parentHelp" inherits="DjinnisVendorerBigFont" text="DJINNISVENDORER_BIG_DRAG_ITEM_HERE_TEXT">
 							<Anchors>
 								<Anchor point="CENTER" relativeTo="$parent" x="0" y="-5"/>
 							</Anchors>
@@ -161,17 +161,17 @@
 					</Layer>
 				</Layers>
 				<Scripts>
-					<OnShow function="VendorerItemListsDragReceiver_OnShow"/>
-					<OnEnter function="VendorerItemListsDragReceiver_OnEnter"/>
-					<OnLeave function="VendorerItemListsDragReceiver_OnLeave"/>
-					<OnClick function="VendorerItemListsDragReceiver_OnClick"/>
-					<OnUpdate function="VendorerItemListsDragReceiver_OnUpdate"/>
+					<OnShow function="DjinnisVendorerItemListsDragReceiver_OnShow"/>
+					<OnEnter function="DjinnisVendorerItemListsDragReceiver_OnEnter"/>
+					<OnLeave function="DjinnisVendorerItemListsDragReceiver_OnLeave"/>
+					<OnClick function="DjinnisVendorerItemListsDragReceiver_OnClick"/>
+					<OnUpdate function="DjinnisVendorerItemListsDragReceiver_OnUpdate"/>
 				</Scripts>
 			</Button>
 		</Frames>
 		<Scripts>
-			<OnLoad function="VendorerItemListsFrame_OnLoad"/>
-			<OnShow function="VendorerItemListsFrame_OnShow"/>
+			<OnLoad function="DjinnisVendorerItemListsFrame_OnLoad"/>
+			<OnShow function="DjinnisVendorerItemListsFrame_OnShow"/>
 			<OnMouseDown>
 				self:StartMoving();
 				self.anchorframe = nil;

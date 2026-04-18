@@ -1,8 +1,8 @@
-# Vendorer
-Vendorer the NPC merchant improvement addon for World of Warcraft.
+# DjinnisVendorer
+DjinnisVendorer the NPC merchant improvement addon for World of Warcraft.
 
 ## Description
-Sometimes vendors sell so many items it's impossible to find the items you require. Introducing Vendorer which expands the merchant frame to display up to 20 items at once and offers several different types of filters to help you quickly browse for what you need.
+Sometimes vendors sell so many items it's impossible to find the items you require. Introducing DjinnisVendorer which expands the merchant frame to display up to 20 items at once and offers several different types of filters to help you quickly browse for what you need.
 
 * **Basic Filtering** You can search by item name, rarity, type, slot or required currency.
 * **Tooltip text** Optionally you can enable search from tooltip text. It is very resource intensive and can be disabled if it causes problems.
@@ -21,7 +21,7 @@ Any and all filters can also be negated by prefixing the query word or phrase wi
 
 ## Other features
 
-Vendorer improves ability to bulk purchase. You can buy several stacks at a time and the window will also display total cost of your purchase. If the default setting causes problems, you can throttle purchases to slower rate in the settings.
+DjinnisVendorer improves ability to bulk purchase. You can buy several stacks at a time and the window will also display total cost of your purchase. If the default setting causes problems, you can throttle purchases to slower rate in the settings.
 
 The addon also includes buttons to sell junk and unusable soulbound items. Selling junk items can optionally be done automatically always when visiting vendors. Via settings you can also enable the buttons to destroy unsellable junk or unusable items. **If toggled on be careful of what you are destroying**. You can always ignore the item as well. No items are automatically destroyed when auto junk sell is enabled.
 
@@ -29,7 +29,7 @@ Automatic smart repair feature will make it easy to repair your gear when visiti
 
 ## Optional feature
 
-Vendorer supports displaying whether an item skin has been added to the wardrobe. For this the addon requires an optional dependency addon [Can I Mog It](http://mods.curse.com/addons/wow/can-i-mog-it). The marker can be disabled in the settings.
+DjinnisVendorer supports displaying whether an item skin has been added to the wardrobe. For this the addon requires an optional dependency addon [Can I Mog It](http://mods.curse.com/addons/wow/can-i-mog-it). The marker can be disabled in the settings.
 
 ### Note
 
@@ -38,11 +38,11 @@ This addon can and **is likely to conflict** with other addons that do modificat
 Still if you do not use any other such addons or the modifications by other addons are minor the risk of conflict is non-existent or small.
 
 ## Dependencies
-Vendorer uses Ace3 which is included in the /libs directory.
+DjinnisVendorer uses Ace3 which is included in the /libs directory.
 
 ### Note for Releases
 
-To guarantee addon loads first the addon folder should be **!Vendorer** (as in prefixed with exclamation mark) since the game loads addons with exclamation marks before ones without.
+To guarantee addon loads first the addon folder should be **!DjinnisVendorer** (as in prefixed with exclamation mark) since the game loads addons with exclamation marks before ones without.
 
 ## License
-Vendorer is licensed under MIT license. See license terms in file LICENSE.
+DjinnisVendorer is licensed under MIT license. See license terms in file LICENSE.

@@ -1,12 +1,12 @@
 ------------------------------------------------------------
--- Vendorer by Sonaza (https://sonaza.com)
+-- DjinnisVendorer by Djinni, Originally created by Sonaza (https://sonaza.com) as "Vendorer"
 -- Licensed under MIT License
 -- See attached license text in file LICENSE
 ------------------------------------------------------------
 
 local ADDON_NAME = ...;
 local Addon = LibStub("AceAddon-3.0"):NewAddon(select(2, ...), ADDON_NAME, "AceEvent-3.0");
-_G["Vendorer"] = Addon;
+_G["DjinnisVendorer"] = Addon;
 
 local AceDB = LibStub("AceDB-3.0");
 local _;
@@ -21,31 +21,31 @@ local LOCALIZED_COSMETIC        = GetItemSubClassInfo(4, 5);
 local LOCALIZED_MISCELLANEOUS   = GetItemClassInfo(15);
 local LOCALIZED_RECIPE          = GetItemClassInfo(9);
 
-VENDORER_IGNORE_ITEMS_BUTTON_TEXT = "Ignore Items";
-VENDORER_ADD_JUNK_BUTTON_TEXT = "Add Junk Items";
-VENDORER_SETTINGS_BUTTON_TEXT = "|TInterface\\Scenarios\\ScenarioIcon-Interact:14:14:0:0|t Settings";
+DJINNISVENDORER_IGNORE_ITEMS_BUTTON_TEXT = "Ignore Items";
+DJINNISVENDORER_ADD_JUNK_BUTTON_TEXT = "Add Junk Items";
+DJINNISVENDORER_SETTINGS_BUTTON_TEXT = "|TInterface\\Scenarios\\ScenarioIcon-Interact:14:14:0:0|t Settings";
 
-VENDORER_SELL_JUNK_ITEMS_TEXT = "Sell Junk";
-VENDORER_SELL_UNUSABLE_ITEMS_TEXT = "Sell Unusable";
-VENDORER_SELL_JUNK_ITEMS_TEXT2 = "Sell / Destroy Junk";
-VENDORER_SELL_UNUSABLE_ITEMS_TEXT2 = "Sell / Destroy Unusable";
+DJINNISVENDORER_SELL_JUNK_ITEMS_TEXT = "Sell Junk";
+DJINNISVENDORER_SELL_UNUSABLE_ITEMS_TEXT = "Sell Unusable";
+DJINNISVENDORER_SELL_JUNK_ITEMS_TEXT2 = "Sell / Destroy Junk";
+DJINNISVENDORER_SELL_UNUSABLE_ITEMS_TEXT2 = "Sell / Destroy Unusable";
 
-VENDORER_BIG_DRAG_ITEM_HERE_TEXT = "|cffffd200Drag item here to|nadd it to the list|r";
+DJINNISVENDORER_BIG_DRAG_ITEM_HERE_TEXT = "|cffffd200Drag item here to|nadd it to the list|r";
 
-VENDORER_AUTO_SELL_JUNK_TITLE_TEXT = "Auto sell junk";
-VENDORER_AUTO_SELL_JUNK_HINT_TEXT = "|cffffffffToggle automatic selling of junk when visiting vendors. Auto sell will not destroy any items.";
+DJINNISVENDORER_AUTO_SELL_JUNK_TITLE_TEXT = "Auto sell junk";
+DJINNISVENDORER_AUTO_SELL_JUNK_HINT_TEXT = "|cffffffffToggle automatic selling of junk when visiting vendors. Auto sell will not destroy any items.";
 
-VENDORER_AUTO_REPAIR_TITLE_TEXT = "Auto repair";
-VENDORER_AUTO_REPAIR_HINT_TEXT = "|cffffffffRepair all gear automatically if possible.";
+DJINNISVENDORER_AUTO_REPAIR_TITLE_TEXT = "Auto repair";
+DJINNISVENDORER_AUTO_REPAIR_HINT_TEXT = "|cffffffffRepair all gear automatically if possible.";
 
-VENDORER_USE_SMART_REPAIR_TITLE_TEXT = "Use smart repair";
-VENDORER_USE_SMART_REPAIR_HINT_TEXT = "|cffffffffWhen doing automatic repair allow Vendorer to try and spend full guild repair allowance first.|n|n|cff00c6ffNote:|cffffffff this option only applies to auto repair!|n|nProbably not recommended if you have unlimited repair funds.";
+DJINNISVENDORER_USE_SMART_REPAIR_TITLE_TEXT = "Use smart repair";
+DJINNISVENDORER_USE_SMART_REPAIR_HINT_TEXT = "|cffffffffWhen doing automatic repair allow DjinnisVendorer to try and spend full guild repair allowance first.|n|n|cff00c6ffNote:|cffffffff this option only applies to auto repair!|n|nProbably not recommended if you have unlimited repair funds.";
 
-VENDORER_CONTRACT_BUTTON_TITLE_TEXT = "Collapse Frame";
-VENDORER_EXPAND_BUTTON_TITLE_TEXT = "Expand Frame";
+DJINNISVENDORER_CONTRACT_BUTTON_TITLE_TEXT = "Collapse Frame";
+DJINNISVENDORER_EXPAND_BUTTON_TITLE_TEXT = "Expand Frame";
 
 -- New filters are marked with |TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:12:12:0:0:|t
-VENDORER_FILTERING_BUTTON_TUTORIAL_TEXT = "You can click here to quickly filter items.|n|nHover to see filtering tips."; 
+DJINNISVENDORER_FILTERING_BUTTON_TUTORIAL_TEXT = "You can click here to quickly filter items.|n|nHover to see filtering tips."; 
 
 local CLASS_ARMOR_TYPES = {
 	WARRIOR     = LOCALIZED_PLATE,
@@ -133,7 +133,7 @@ local PATCHED_IGNORE_LIST_ITEMS = {
 };
 local PATCHED_IGNORE_LIST_REVISION = 1;
 
-StaticPopupDialogs["VENDORER_CONFIRM_SELL_UNUSABLES"] = {
+StaticPopupDialogs["DJINNISVENDORER_CONFIRM_SELL_UNUSABLES"] = {
 	text = "Are you sure you want to sell unusable items? You can still buy them back after.%s",
 	button1 = YES,
 	button2 = NO,
@@ -141,8 +141,8 @@ StaticPopupDialogs["VENDORER_CONFIRM_SELL_UNUSABLES"] = {
 		Addon:ConfirmSellUnusables();
 	end,
 	OnShow = function()
-		if(StaticPopup_Visible("VENDORER_CONFIRM_DESTROY_JUNK")) then
-			StaticPopup_Hide("VENDORER_CONFIRM_DESTROY_JUNK");
+		if(StaticPopup_Visible("DJINNISVENDORER_CONFIRM_DESTROY_JUNK")) then
+			StaticPopup_Hide("DJINNISVENDORER_CONFIRM_DESTROY_JUNK");
 		end
 	end,
 	timeout = 0,
@@ -150,7 +150,7 @@ StaticPopupDialogs["VENDORER_CONFIRM_SELL_UNUSABLES"] = {
 	hideOnEscape = 1,
 };
 
-StaticPopupDialogs["VENDORER_CONFIRM_DESTROY_JUNK"] = {
+StaticPopupDialogs["DJINNISVENDORER_CONFIRM_DESTROY_JUNK"] = {
 	text = "|cffff1111Warning! Confirming this action will also destroy|n%d item%s and the items destroyed cannot be restored.|r|n|nAre you sure you want to continue?",
 	button1 = YES,
 	button2 = NO,
@@ -158,8 +158,8 @@ StaticPopupDialogs["VENDORER_CONFIRM_DESTROY_JUNK"] = {
 		Addon:ConfirmSellJunk();
 	end,
 	OnShow = function()
-		if(StaticPopup_Visible("VENDORER_CONFIRM_SELL_UNUSABLES")) then
-			StaticPopup_Hide("VENDORER_CONFIRM_SELL_UNUSABLES");
+		if(StaticPopup_Visible("DJINNISVENDORER_CONFIRM_SELL_UNUSABLES")) then
+			StaticPopup_Hide("DJINNISVENDORER_CONFIRM_SELL_UNUSABLES");
 		end
 	end,
 	timeout = 0,
@@ -168,7 +168,7 @@ StaticPopupDialogs["VENDORER_CONFIRM_DESTROY_JUNK"] = {
 	hideOnEscape = 1,
 };
 
-StaticPopupDialogs["VENDORER_CONFIRM_CLEAR_IGNORE_LIST"] = {
+StaticPopupDialogs["DJINNISVENDORER_CONFIRM_CLEAR_IGNORE_LIST"] = {
 	text = "Are you sure you want wipe the ignore list? This action cannot be undone.",
 	button1 = YES,
 	button2 = NO,
@@ -185,7 +185,7 @@ StaticPopupDialogs["VENDORER_CONFIRM_CLEAR_IGNORE_LIST"] = {
 	hideOnEscape = 1,
 };
 
-StaticPopupDialogs["VENDORER_CONFIRM_CLEAR_JUNKSELL_LIST"] = {
+StaticPopupDialogs["DJINNISVENDORER_CONFIRM_CLEAR_JUNKSELL_LIST"] = {
 	text = "Are you sure you want wipe the junk sell list? This action cannot be undone.",
 	button1 = YES,
 	button2 = NO,
@@ -202,8 +202,8 @@ StaticPopupDialogs["VENDORER_CONFIRM_CLEAR_JUNKSELL_LIST"] = {
 	hideOnEscape = 1,
 };
 
-StaticPopupDialogs["VENDORER_FILTERING_PERFORMANCE_ALERT"] = {
-	text = "Vendorer tooltip text filtering may be causing significant framerate drops. While a powerful tool, disabling it may improve the game performance.|n|nDo you wish to disable it?",
+StaticPopupDialogs["DJINNISVENDORER_FILTERING_PERFORMANCE_ALERT"] = {
+	text = "DjinnisVendorer tooltip text filtering may be causing significant framerate drops. While a powerful tool, disabling it may improve the game performance.|n|nDo you wish to disable it?",
 	button1 = YES,
 	button2 = NO,
 	OnAccept = function(self)
@@ -213,16 +213,16 @@ StaticPopupDialogs["VENDORER_FILTERING_PERFORMANCE_ALERT"] = {
 	end,
 	OnCancel = function(self)
 		-- Disable alert for rest of the session
-		VendorerFramerateWatcher:SetScript("OnUpdate", nil);
+		DjinnisVendorerFramerateWatcher:SetScript("OnUpdate", nil);
 	end,
 	timeout = 0,
 	hideOnEscape = 1,
 };
 
-StaticPopupDialogs["VENDORER_EQOL_MERCHANT_CONFLICT"] = {
-	text = "|cffffd200Vendorer / EnhanceQoL conflict|r|n|n"
-	    .. "EnhanceQoL's |cffffffffMerchant|r submodule and Vendorer both customise the merchant window in the same way, and they conflict (phantom item slots float outside the window).|n|n"
-	    .. "Pick one to use. You can disable EnhanceQoL's submodule from here, or close this and switch Vendorer's expansion to None instead.",
+StaticPopupDialogs["DJINNISVENDORER_EQOL_MERCHANT_CONFLICT"] = {
+	text = "|cffffd200DjinnisVendorer / EnhanceQoL conflict|r|n|n"
+	    .. "EnhanceQoL's |cffffffffMerchant|r submodule and DjinnisVendorer both customise the merchant window in the same way, and they conflict (phantom item slots float outside the window).|n|n"
+	    .. "Pick one to use. You can disable EnhanceQoL's submodule from here, or close this and switch DjinnisVendorer's expansion to None instead.",
 	button1 = "Disable EnhanceQoL Merchant",
 	button2 = "Don't show again",
 	button3 = "Remind me later",
@@ -232,7 +232,7 @@ StaticPopupDialogs["VENDORER_EQOL_MERCHANT_CONFLICT"] = {
 	end,
 	OnCancel = function(self)
 		Addon.db.global.EQoLMerchantConflictAck = true;
-		Addon:AddMessage("EnhanceQoL Merchant conflict warning suppressed. Use |cffffd200/vendorer eqolwarn|r to re-enable it.");
+		Addon:AddMessage("EnhanceQoL Merchant conflict warning suppressed. Use |cffffd200/djinnisvendorer eqolwarn|r to re-enable it.");
 	end,
 	OnAlt = function(self)
 		-- Remind me later: leave ack untouched.
@@ -268,7 +268,7 @@ end
 
 Addon.MerchantWindowOpeningTime = 0;
 Addon.UpdatedFilteringTime = 0;
-function VendorerFramerateWatcher_OnUpdate(self, elapsed)
+function DjinnisVendorerFramerateWatcher_OnUpdate(self, elapsed)
 	if(not Addon.db.global.UseTooltipSearch) then return end
 	
 	-- Merchant window opening may lag a bit so don't display popup for that
@@ -287,8 +287,8 @@ function VendorerFramerateWatcher_OnUpdate(self, elapsed)
 		
 		if((GetTime() - Addon.UpdatedFilteringTime) < 5.0) then
 			if(diff < 0 and math.abs(diff) >= self.averageFPS * 0.3 and framerate <= 11) then
-				if(not StaticPopup_Visible("VENDORER_FILTERING_PERFORMANCE_ALERT")) then
-					StaticPopup_Show("VENDORER_FILTERING_PERFORMANCE_ALERT");
+				if(not StaticPopup_Visible("DJINNISVENDORER_FILTERING_PERFORMANCE_ALERT")) then
+					StaticPopup_Show("DJINNISVENDORER_FILTERING_PERFORMANCE_ALERT");
 				end
 			end
 		end
@@ -309,9 +309,9 @@ local PLAYER_CLASS_READABLE, PLAYER_CLASS = UnitClass("player");
 PLAYER_CLASS_READABLE = string.format("|c%s%s|r", RAID_CLASS_COLORS[PLAYER_CLASS].colorStr, PLAYER_CLASS_READABLE);
 local PLAYER_RACE_READABLE = UnitRace("player");
 
-VENDORER_EXTENSION_NONE     = 1;
-VENDORER_EXTENSION_NARROW   = 2;
-VENDORER_EXTENSION_WIDE     = 3;
+DJINNISVENDORER_EXTENSION_NONE     = 1;
+DJINNISVENDORER_EXTENSION_NARROW   = 2;
+DJINNISVENDORER_EXTENSION_WIDE     = 3;
 
 function Addon:OnInitialize()
 	local defaults = {
@@ -323,7 +323,7 @@ function Addon:OnInitialize()
 			ItemJunkList = nil,
 		},
 		global = {
-			MerchantFrameExtension = VENDORER_EXTENSION_NARROW,
+			MerchantFrameExtension = DJINNISVENDORER_EXTENSION_NARROW,
 			AutoSellJunk = false,
 			PaintArmorTypes = true,
 			
@@ -362,6 +362,18 @@ function Addon:OnInitialize()
 			-- Suppresses the EnhanceQoL Merchant submodule conflict popup.
 			EQoLMerchantConflictAck = false,
 
+			-- Vertical list view replaces the merchant grid with a scrollable
+			-- list of every item the merchant offers. Independent of the
+			-- None/Narrow/Wide extension toggle.
+			ListViewEnabled = false,
+			-- When true, non-matching items are removed from the list. When
+			-- false, they appear greyed out below the matches.
+			ListViewHideNonMatches = false,
+			-- Sort order for the list view: "default" (merchant order),
+			-- "name", "price", or "quality". Applied per segment so matches
+			-- stay above non-matches.
+			ListViewSortKey = "default",
+
 			ExpandTutorialShown = false,
 			FilteringButtonAlertShown = false,
 			
@@ -374,23 +386,23 @@ function Addon:OnInitialize()
 		},
 	};
 	
-	self.db = AceDB:New("VendorerDB", defaults);
+	self.db = AceDB:New("DjinnisVendorerDB", defaults);
 	
 	Addon:ConvertIgnoreLists();
 	Addon:PatchIgnoreList();
 	
 	if(type(self.db.global.MerchantFrameExtended) == "boolean") then
 		if(self.db.global.MerchantFrameExtended) then
-			self.db.global.MerchantFrameExtension = VENDORER_EXTENSION_NARROW;
+			self.db.global.MerchantFrameExtension = DJINNISVENDORER_EXTENSION_NARROW;
 		else
-			self.db.global.MerchantFrameExtension = VENDORER_EXTENSION_NONE;
+			self.db.global.MerchantFrameExtension = DJINNISVENDORER_EXTENSION_NONE;
 		end
 		self.db.global.MerchantFrameExtended = nil;
 	end
 end
 
 function Addon:OnEnable()
-	if(not VendorerItemListsFrame) then
+	if(not DjinnisVendorerItemListsFrame) then
 		error("You have updated the addon but only reloaded the interface. Please restart the game.", 1);
 	end
 	
@@ -474,13 +486,13 @@ function Addon:AddTooltipInfo(tooltip, link)
 	local ignoreList, isIgnoreListPersonal = Addon:GetCurrentItemIgnoreList();
 	
 	if(junkList[itemID] and not ignoreList[itemID]) then
-		tooltip:AddDoubleLine("|cffe8608fVendorer|r", string.format("|cffe8608fMarked as junk (%s list)|r", isJunkListPersonal and "personal" or "global"));
+		tooltip:AddDoubleLine("|cffe8608fDjinnisVendorer|r", string.format("|cffe8608fMarked as junk (%s list)|r", isJunkListPersonal and "personal" or "global"));
 	elseif(junkList[itemID] and ignoreList[itemID]) then
-		tooltip:AddDoubleLine("|cffe8608fVendorer|r", string.format("|cffe8608fMarked as junk but ignored (%s list)|r", isJunkListPersonal and "personal" or "global"));
+		tooltip:AddDoubleLine("|cffe8608fDjinnisVendorer|r", string.format("|cffe8608fMarked as junk but ignored (%s list)|r", isJunkListPersonal and "personal" or "global"));
 	end
 	
 	if(not junkList[itemID] and ignoreList[itemID]) then
-		tooltip:AddDoubleLine("|cffe8608fVendorer|r", string.format("|cffe8608fIgnored (%s list)|r", isIgnoreListPersonal and "personal" or "global"));
+		tooltip:AddDoubleLine("|cffe8608fDjinnisVendorer|r", string.format("|cffe8608fIgnored (%s list)|r", isIgnoreListPersonal and "personal" or "global"));
 	end
 	
 	tooltip:Show();
@@ -498,7 +510,7 @@ function Addon:MakeFrameMovable()
 	end);
 end
 
-local MESSAGE_PATTERN = "|cffe8608fVendorer|r %s";
+local MESSAGE_PATTERN = "|cffe8608fDjinnisVendorer|r %s";
 function Addon:AddMessage(pattern, ...)
 	DEFAULT_CHAT_FRAME:AddMessage(MESSAGE_PATTERN:format(string.format(pattern, ...)), 1, 1, 1);
 end
@@ -517,28 +529,28 @@ end
 
 function Addon:RestoreSavedSettings()
 	Addon:UpdateExtensionToggleButton();
-	VendorerAutoSellJunkButton:SetChecked(self.db.global.AutoSellJunk);
-	VendorerAutoRepairButton:SetChecked(self.db.global.AutoRepair);
-	VendorerAutoSmartRepairButton:SetChecked(self.db.global.SmartAutoRepair);
+	DjinnisVendorerAutoSellJunkButton:SetChecked(self.db.global.AutoSellJunk);
+	DjinnisVendorerAutoRepairButton:SetChecked(self.db.global.AutoRepair);
+	DjinnisVendorerAutoSmartRepairButton:SetChecked(self.db.global.SmartAutoRepair);
 	
 	if(not self.db.global.DestroyUnsellables) then
-		VendorerSellJunkButton:SetText(_G["VENDORER_SELL_JUNK_ITEMS_TEXT"]);
-		VendorerSellUnusablesButton:SetText(_G["VENDORER_SELL_UNUSABLE_ITEMS_TEXT"]);
+		DjinnisVendorerSellJunkButton:SetText(_G["DJINNISVENDORER_SELL_JUNK_ITEMS_TEXT"]);
+		DjinnisVendorerSellUnusablesButton:SetText(_G["DJINNISVENDORER_SELL_UNUSABLE_ITEMS_TEXT"]);
 	else
-		VendorerSellJunkButton:SetText(_G["VENDORER_SELL_JUNK_ITEMS_TEXT2"]);
-		VendorerSellUnusablesButton:SetText(_G["VENDORER_SELL_UNUSABLE_ITEMS_TEXT2"]);
+		DjinnisVendorerSellJunkButton:SetText(_G["DJINNISVENDORER_SELL_JUNK_ITEMS_TEXT2"]);
+		DjinnisVendorerSellUnusablesButton:SetText(_G["DJINNISVENDORER_SELL_UNUSABLE_ITEMS_TEXT2"]);
 	end
 end
 
 function Addon:ToggleCursorHighlights(toggle)
 	if(toggle) then
-		VendorerIgnoreItemsButtonHighlight:Show();
-		VendorerJunkItemsButtonHighlight:Show();
-		VendorerItemListsDragReceiver:Show();
+		DjinnisVendorerIgnoreItemsButtonHighlight:Show();
+		DjinnisVendorerJunkItemsButtonHighlight:Show();
+		DjinnisVendorerItemListsDragReceiver:Show();
 	else
-		VendorerIgnoreItemsButtonHighlight:Hide();
-		VendorerJunkItemsButtonHighlight:Hide();
-		VendorerItemListsDragReceiver:Hide();
+		DjinnisVendorerIgnoreItemsButtonHighlight:Hide();
+		DjinnisVendorerJunkItemsButtonHighlight:Hide();
+		DjinnisVendorerItemListsDragReceiver:Hide();
 	end
 end
 
@@ -563,7 +575,7 @@ function Addon:EnhanceMerchantFrame()
 	local extension = Addon:GetCurrentExtension();
 	
 	local offset = 0;
-	if(extension ~= VENDORER_EXTENSION_NONE) then
+	if(extension ~= DJINNISVENDORER_EXTENSION_NONE) then
 		offset = 164;
 	end
 	
@@ -586,43 +598,50 @@ function Addon:EnhanceMerchantFrame()
 end
 
 function Addon:UpdateExtensionToggleButton()
-	if(Addon.db.global.MerchantFrameExtension == VENDORER_EXTENSION_NONE) then
-		VendorerToggleExtensionFrameButtonContract:Disable();
+	if(Addon.db.global.MerchantFrameExtension == DJINNISVENDORER_EXTENSION_NONE) then
+		DjinnisVendorerToggleExtensionFrameButtonContract:Disable();
 	else
-		VendorerToggleExtensionFrameButtonContract:Enable();
+		DjinnisVendorerToggleExtensionFrameButtonContract:Enable();
 	end
 	
-	if(Addon.db.global.MerchantFrameExtension == VENDORER_EXTENSION_WIDE) then
-		VendorerToggleExtensionFrameButtonExpand:Disable();
+	if(Addon.db.global.MerchantFrameExtension == DJINNISVENDORER_EXTENSION_WIDE) then
+		DjinnisVendorerToggleExtensionFrameButtonExpand:Disable();
 	else
-		VendorerToggleExtensionFrameButtonExpand:Enable();
+		DjinnisVendorerToggleExtensionFrameButtonExpand:Enable();
 	end
 	
 	Addon:UpdateExtensionPanel();
 end
 
 function Addon:UpdateExtensionPanel()
-	if(Addon.db.global.MerchantFrameExtension ~= VENDORER_EXTENSION_NONE) then
+	local listOn = Addon.db and Addon.db.global and Addon.db.global.ListViewEnabled;
+	if(Addon.db.global.MerchantFrameExtension ~= DJINNISVENDORER_EXTENSION_NONE or listOn) then
 		Addon:ShowExtensionPanel();
 	else
 		Addon:HideExtensionPanel();
 	end
-	
+
 	Addon:EnhanceMerchantFrame();
-	
-	if(VendorerItemListsFrame:IsVisible()) then
-		VendorerItemListsFrame_Reanchor();
+
+	if(DjinnisVendorerItemListsFrame:IsVisible()) then
+		DjinnisVendorerItemListsFrame_Reanchor();
 	end
 end
 
 function Addon:GetCurrentExtension()
+	-- List view replaces the merchant grid; collapse to Narrow so the search
+	-- bar / sell buttons remain available without reanchoring slots 11/12.
+	if(Addon.db and Addon.db.global and Addon.db.global.ListViewEnabled) then
+		return DJINNISVENDORER_EXTENSION_NARROW;
+	end
+
 	local extension = Addon.db.global.MerchantFrameExtension;
 	local numItems = Addon:GetUnfilteredMerchantNumItems();
-	
-	if(numItems <= 10 and extension == VENDORER_EXTENSION_WIDE) then
-		extension = VENDORER_EXTENSION_NARROW;
+
+	if(numItems <= 10 and extension == DJINNISVENDORER_EXTENSION_WIDE) then
+		extension = DJINNISVENDORER_EXTENSION_NARROW;
 	end
-	
+
 	return extension;
 end
 
@@ -644,38 +663,38 @@ end
 function Addon:ShowExtensionPanel()
 	local extension = Addon:GetCurrentExtension();
 	
-	if(extension == VENDORER_EXTENSION_WIDE) then
+	if(extension == DJINNISVENDORER_EXTENSION_WIDE) then
 		MerchantFrame:SetWidth(834);
 		-- Midnight (12.0) only ships 12 static MerchantItem frames. Going past
 		-- 12 makes Blizzard's own MerchantFrame_UpdateMerchantInfo crash on a
 		-- nil _G["MerchantItem"..i] lookup.
 		Addon:SetMerchantItemsPerPage(12);
 
-		VendorerMerchantFrameExtension:Show();
-		VendorerMerchantFrameExtensionNarrow:Hide();
-		VendorerMerchantFrameExtensionWide:Show();
-	elseif(extension == VENDORER_EXTENSION_NARROW) then
+		DjinnisVendorerMerchantFrameExtension:Show();
+		DjinnisVendorerMerchantFrameExtensionNarrow:Hide();
+		DjinnisVendorerMerchantFrameExtensionWide:Show();
+	elseif(extension == DJINNISVENDORER_EXTENSION_NARROW) then
 		MerchantFrame:SetWidth(500);
 		Addon:SetMerchantItemsPerPage(10);
 
-		VendorerMerchantFrameExtension:Show();
-		VendorerMerchantFrameExtensionNarrow:Show();
-		VendorerMerchantFrameExtensionWide:Hide();
+		DjinnisVendorerMerchantFrameExtension:Show();
+		DjinnisVendorerMerchantFrameExtensionNarrow:Show();
+		DjinnisVendorerMerchantFrameExtensionWide:Hide();
 	end
 	
-	VendorerExtensionFrameItems:Show();
+	DjinnisVendorerExtensionFrameItems:Show();
 end
 
 function Addon:HideExtensionPanel()
 	MerchantFrame:SetWidth(336);
 	Addon:SetMerchantItemsPerPage(10);
 
-	VendorerMerchantFrameExtension:Hide();
+	DjinnisVendorerMerchantFrameExtension:Hide();
 
-	VendorerExtensionFrameItems:Hide();
+	DjinnisVendorerExtensionFrameItems:Hide();
 end
 
-function VendorerToggleExtensionFrameButton_OnClick(self, button)
+function DjinnisVendorerToggleExtensionFrameButton_OnClick(self, button)
 	local id = self:GetID();
 	if(id == 1) then
 		Addon.db.global.MerchantFrameExtension = Addon.db.global.MerchantFrameExtension - 1;
@@ -689,11 +708,11 @@ function VendorerToggleExtensionFrameButton_OnClick(self, button)
 	Addon:UpdateExtensionToggleButton();
 end
 
-function VendorerToggleExtensionFrameButton_OnEnter(self)
+function DjinnisVendorerToggleExtensionFrameButton_OnEnter(self)
 	if(self.tooltipTitle) then
 		GameTooltip:ClearAllPoints();
-		GameTooltip:SetOwner(VendorerToggleExtensionFrameButtonExpand, "ANCHOR_PRESERVE");
-		GameTooltip:SetPoint("LEFT", VendorerToggleExtensionFrameButtonExpand, "RIGHT", 0, 0);
+		GameTooltip:SetOwner(DjinnisVendorerToggleExtensionFrameButtonExpand, "ANCHOR_PRESERVE");
+		GameTooltip:SetPoint("LEFT", DjinnisVendorerToggleExtensionFrameButtonExpand, "RIGHT", 0, 0);
 		
 		local titleText = _G[self.tooltipTitle] or self.tooltipTitle;
 		GameTooltip:AddLine(titleText, nil, nil, nil, true);
@@ -707,20 +726,20 @@ function VendorerToggleExtensionFrameButton_OnEnter(self)
 	end
 end
 
-function VendorerCheckButtonTemplate_OnLoad(self)
+function DjinnisVendorerCheckButtonTemplate_OnLoad(self)
 	local text = _G[self:GetName() .. "Text"];
 	if(text) then
 		text:SetText(self:GetText());
 		
-		if(self == VendorerArmorPaintRedButton) then
+		if(self == DjinnisVendorerArmorPaintRedButton) then
 			text:SetText("Highlight " .. Addon:GetClassArmorType());
 		end
 		
-		text:SetFontObject("VendorerCheckButtonFont");
+		text:SetFontObject("DjinnisVendorerCheckButtonFont");
 	end
 end
 
-function VendorerCheckButtonTemplate_OnEnter(self)
+function DjinnisVendorerCheckButtonTemplate_OnEnter(self)
 	if(self.tooltipTitle and self.tooltipText) then
 		GameTooltip:ClearAllPoints();
 		GameTooltip:SetOwner(self, "ANCHOR_PRESERVE");
@@ -736,7 +755,7 @@ function VendorerCheckButtonTemplate_OnEnter(self)
 	end
 end
 
-function VendorerCheckButtonTemplate_OnClick(self, button)
+function DjinnisVendorerCheckButtonTemplate_OnClick(self, button)
 	local buttonName = self:GetName();
 	local func = _G[buttonName .. "_OnClick"];
 	if(func and type(func) == "function") then
@@ -953,20 +972,20 @@ function Addon:GetItemTooltipInfo(item)
 		isUsable = false;
 	end
 	
-	VendorerTooltip:SetOwner(UIParent, "ANCHOR_NONE");
+	DjinnisVendorerTooltip:SetOwner(UIParent, "ANCHOR_NONE");
 	if(Addon:IsCurrencyItem(itemLink)) then
 		local currencyID = Addon:GetCurrencyInfo(itemLink);
-		VendorerTooltip:SetCurrencyByID(currencyID);
+		DjinnisVendorerTooltip:SetCurrencyByID(currencyID);
 	else
-		VendorerTooltip:SetHyperlink(itemLink);
+		DjinnisVendorerTooltip:SetHyperlink(itemLink);
 	end
-	local numLines = VendorerTooltip:NumLines();
+	local numLines = DjinnisVendorerTooltip:NumLines();
 	
 	for line = 2, numLines do
 		local wasUsable = isUsable;
 		
-		local left = _G["VendorerTooltipTextLeft" .. line];
-		local right = _G["VendorerTooltipTextRight" .. line];
+		local left = _G["DjinnisVendorerTooltipTextLeft" .. line];
+		local right = _G["DjinnisVendorerTooltipTextRight" .. line];
 		
 		if(not bindType) then
 			bindType = Addon:ScanBindType(left:GetText());
@@ -1091,8 +1110,8 @@ function Addon:AddCursorItemToIgnoreList()
 		ClearCursor();
 	end
 	
-	if(not VendorerItemListsFrame:IsVisible()) then
-		VendorerIgnoreItemsButton_OnEnter(VendorerIgnoreItemsButton);
+	if(not DjinnisVendorerItemListsFrame:IsVisible()) then
+		DjinnisVendorerIgnoreItemsButton_OnEnter(DjinnisVendorerIgnoreItemsButton);
 	end
 end
 
@@ -1137,7 +1156,7 @@ function Addon:AddItemToIgnoreList(itemLink)
 		Addon:AddMessage("The item remains on the global junk list but will not be sold.");
 	end
 	
-	Addon:UpdateVendorerItemLists();
+	Addon:UpdateDjinnisVendorerItemLists();
 end
 
 function Addon:AddCursorItemToJunkList()
@@ -1147,8 +1166,8 @@ function Addon:AddCursorItemToJunkList()
 		ClearCursor();
 	end
 	
-	if(not VendorerItemListsFrame:IsVisible()) then
-		VendorerJunkItemsButton_OnEnter(VendorerJunkItemsButton);
+	if(not DjinnisVendorerItemListsFrame:IsVisible()) then
+		DjinnisVendorerJunkItemsButton_OnEnter(DjinnisVendorerJunkItemsButton);
 	end
 end
 
@@ -1185,10 +1204,10 @@ function Addon:AddItemToJunkList(itemLink)
 		Addon:AddMessage("The item remains on the %s ignore list and will not be sold.", isIgnoreListPersonal and "personal" or "global");
 	end
 	
-	Addon:UpdateVendorerItemLists();
+	Addon:UpdateDjinnisVendorerItemLists();
 end
 
-function VendorerIgnoreItemsButton_OnEnter(self)
+function DjinnisVendorerIgnoreItemsButton_OnEnter(self)
 	GameTooltip:ClearAllPoints();
 	GameTooltip:SetOwner(self, "ANCHOR_PRESERVE");
 	GameTooltip:SetPoint("TOPLEFT", self, "RIGHT", 0, 70);
@@ -1220,7 +1239,7 @@ function VendorerIgnoreItemsButton_OnEnter(self)
 		GameTooltip:AddLine(string.format("%d Ignored Items", numIgnoredItems));
 	end
 	
-	self.text:SetFontObject("VendorerButtonFontHighlight");
+	self.text:SetFontObject("DjinnisVendorerButtonFontHighlight");
 	
 	GameTooltip:Show();
 	
@@ -1234,15 +1253,15 @@ function VendorerIgnoreItemsButton_OnEnter(self)
 	end
 end
 
-function VendorerIgnoreItemsButton_OnLeave(self)
-	self.text:SetFontObject("VendorerButtonFont");
+function DjinnisVendorerIgnoreItemsButton_OnLeave(self)
+	self.text:SetFontObject("DjinnisVendorerButtonFont");
 	GameTooltip:Hide();
 	self:SetScript("OnUpdate", nil);
 end
 
 function Addon:OpenIgnoredItemsListsFrame()
 	GameTooltip:Hide();
-	VendorerItemListsFrameDescription:SetText("These items will not be sold.");
+	DjinnisVendorerItemListsFrameDescription:SetText("These items will not be sold.");
 	
 	local usedListDescription;
 	if(not self.db.char.UsingPersonalIgnoreList) then
@@ -1250,15 +1269,15 @@ function Addon:OpenIgnoredItemsListsFrame()
 	else
 		usedListDescription = "|cff00ff00Using personal ignore list|r";
 	end
-	VendorerItemListsFrameListDescription:SetText(usedListDescription);
+	DjinnisVendorerItemListsFrameListDescription:SetText(usedListDescription);
 		
-	VendorerItemListsFrame.addItemFunction = Addon.AddCursorItemToIgnoreList;
+	DjinnisVendorerItemListsFrame.addItemFunction = Addon.AddCursorItemToIgnoreList;
 	
 	local ignoreList = Addon:GetCurrentItemIgnoreList();
-	Addon:OpenVendorerItemListsFrame(1, "Vendorer Ignored Items", ignoreList);
+	Addon:OpenDjinnisVendorerItemListsFrame(1, "DjinnisVendorer Ignored Items", ignoreList);
 end
 
-function VendorerIgnoreItemsButton_OnClick(self, button)
+function DjinnisVendorerIgnoreItemsButton_OnClick(self, button)
 	if(button == "LeftButton") then
 		if(not GetCursorInfo()) then
 			Addon:OpenIgnoredItemsListsFrame();
@@ -1268,7 +1287,7 @@ function VendorerIgnoreItemsButton_OnClick(self, button)
 	elseif(button == "RightButton" and IsShiftKeyDown()) then
 		if(not GetCursorInfo()) then
 			for link, _ in pairs(Addon:GetCurrentItemIgnoreList()) do
-				StaticPopup_Show("VENDORER_CONFIRM_CLEAR_IGNORE_LIST");
+				StaticPopup_Show("DJINNISVENDORER_CONFIRM_CLEAR_IGNORE_LIST");
 				return;
 			end
 		else
@@ -1279,7 +1298,7 @@ end
 
 function Addon:OpenJunkItemsListsFrame()
 	GameTooltip:Hide();
-	VendorerItemListsFrameDescription:SetText("These items are always sold.");
+	DjinnisVendorerItemListsFrameDescription:SetText("These items are always sold.");
 	
 	local usedListDescription;
 	if(not self.db.char.UsingPersonalJunkList) then
@@ -1287,15 +1306,15 @@ function Addon:OpenJunkItemsListsFrame()
 	else
 		usedListDescription = "|cff00ff00Using personal junk list|r";
 	end
-	VendorerItemListsFrameListDescription:SetText(usedListDescription);
+	DjinnisVendorerItemListsFrameListDescription:SetText(usedListDescription);
 	
-	VendorerItemListsFrame.addItemFunction = Addon.AddCursorItemToJunkList;
+	DjinnisVendorerItemListsFrame.addItemFunction = Addon.AddCursorItemToJunkList;
 	
 	local junkList = Addon:GetCurrentItemJunkList();
-	Addon:OpenVendorerItemListsFrame(2, "Vendorer Junk Items", junkList);
+	Addon:OpenDjinnisVendorerItemListsFrame(2, "DjinnisVendorer Junk Items", junkList);
 end
 
-function VendorerJunkItemsButton_OnClick(self, button)
+function DjinnisVendorerJunkItemsButton_OnClick(self, button)
 	if(button == "LeftButton") then
 		if(not GetCursorInfo()) then
 			Addon:OpenJunkItemsListsFrame();
@@ -1305,7 +1324,7 @@ function VendorerJunkItemsButton_OnClick(self, button)
 	elseif(button == "RightButton" and IsShiftKeyDown()) then
 		if(not GetCursorInfo()) then
 			for link, _ in pairs(Addon:GetCurrentItemJunkList()) do
-				StaticPopup_Show("VENDORER_CONFIRM_CLEAR_JUNKSELL_LIST");
+				StaticPopup_Show("DJINNISVENDORER_CONFIRM_CLEAR_JUNKSELL_LIST");
 				return;
 			end
 		else
@@ -1314,7 +1333,7 @@ function VendorerJunkItemsButton_OnClick(self, button)
 	end
 end
 
-function VendorerJunkItemsButton_OnEnter(self)
+function DjinnisVendorerJunkItemsButton_OnEnter(self)
 	GameTooltip:ClearAllPoints();
 	GameTooltip:SetOwner(self, "ANCHOR_PRESERVE");
 	GameTooltip:SetPoint("TOPLEFT", self, "RIGHT", 0, 70);
@@ -1346,7 +1365,7 @@ function VendorerJunkItemsButton_OnEnter(self)
 		GameTooltip:AddLine(string.format("%d Junk Items", numJunkItems));
 	end
 	
-	self.text:SetFontObject("VendorerButtonFontHighlight");
+	self.text:SetFontObject("DjinnisVendorerButtonFontHighlight");
 	
 	GameTooltip:Show();
 	
@@ -1360,8 +1379,8 @@ function VendorerJunkItemsButton_OnEnter(self)
 	end
 end
 
-function VendorerJunkItemsButton_OnLeave(self)
-	self.text:SetFontObject("VendorerButtonFont");
+function DjinnisVendorerJunkItemsButton_OnLeave(self)
+	self.text:SetFontObject("DjinnisVendorerButtonFont");
 	GameTooltip:Hide();
 	self:SetScript("OnUpdate", nil);
 end
@@ -1597,19 +1616,19 @@ function Addon:BAG_UPDATE_DELAYED()
 	end
 	
 	if(Addon.UpdateTooltip == 1) then
-		VendorerSellJunkButton_OnEnter(VendorerSellJunkButton)
+		DjinnisVendorerSellJunkButton_OnEnter(DjinnisVendorerSellJunkButton)
 	elseif(Addon.UpdateTooltip == 2) then
-		VendorerSellUnusablesButton_OnEnter(VendorerSellUnusablesButton)
+		DjinnisVendorerSellUnusablesButton_OnEnter(DjinnisVendorerSellUnusablesButton)
 	end
 end
 
-function VendorerSellButton_OnLeave(self)
+function DjinnisVendorerSellButton_OnLeave(self)
 	Addon.UpdateTooltip = nil;
 	Addon:UnregisterEvent("BAG_UPDATE_DELAYED");
 	GameTooltip:Hide();
 end
 
-function VendorerSellJunkButton_OnEnter(self)
+function DjinnisVendorerSellJunkButton_OnEnter(self)
 	local items = Addon:ScanContainers(FilterJunkItems);
 	local sellPrice = 0;
 	local numItemsToDestroy = 0;
@@ -1667,15 +1686,15 @@ function VendorerSellJunkButton_OnEnter(self)
 	Addon:RegisterEvent("BAG_UPDATE_DELAYED");
 end
 
-function VendorerSellJunkButton_OnClick(self, button)
+function DjinnisVendorerSellJunkButton_OnClick(self, button)
 	if (IsControlKeyDown()) then
 		local npcId = Addon:GetNpcIdFromGUID(UnitGUID("NPC"));
 		if (Addon.db.global.MerchantAutoSellIgnore[npcId] ~= nil) then
 			Addon:AddMessage("This merchant has been removed from auto sell ignore list.");
 			Addon.db.global.MerchantAutoSellIgnore[npcId] = nil;
 			
-			VendorerSellButton_OnLeave(self);
-			VendorerSellJunkButton_OnEnter(self);
+			DjinnisVendorerSellButton_OnLeave(self);
+			DjinnisVendorerSellJunkButton_OnEnter(self);
 		end
 	end
 	
@@ -1698,13 +1717,13 @@ function VendorerSellJunkButton_OnClick(self, button)
 	end
 	
 	if(itemsToDestroy > 0) then
-		StaticPopup_Show("VENDORER_CONFIRM_DESTROY_JUNK", itemsToDestroy, itemsToDestroy == 1 and "" or "s");
+		StaticPopup_Show("DJINNISVENDORER_CONFIRM_DESTROY_JUNK", itemsToDestroy, itemsToDestroy == 1 and "" or "s");
 	else
 		Addon:ConfirmSellJunk();
 	end
 end
 
-function VendorerSellUnusablesButton_OnEnter(self, button)
+function DjinnisVendorerSellUnusablesButton_OnEnter(self, button)
 	local items = Addon:ScanContainers(FilterUnusableItems);
 	local sellPrice = 0;
 	local numItemsToDestroy = 0;
@@ -1768,7 +1787,7 @@ function VendorerSellUnusablesButton_OnEnter(self, button)
 	Addon:RegisterEvent("BAG_UPDATE_DELAYED");
 end
 
-function VendorerSellUnusablesButton_OnClick(self, button)
+function DjinnisVendorerSellUnusablesButton_OnClick(self, button)
 	local items = Addon:ScanContainers(FilterUnusableItems);
 	if(#items == 0) then return end
 	
@@ -1787,20 +1806,20 @@ function VendorerSellUnusablesButton_OnClick(self, button)
 		destroyWarning = string.format("|n|n|cffff1111Warning! Confirming this action will also destroy %d item%s and the items destroyed cannot be restored.", itemsToDestroy, itemsToDestroy == 1 and "" or "s");
 	end
 	
-	StaticPopupDialogs["VENDORER_CONFIRM_SELL_UNUSABLES"].showAlert = (itemsToDestroy > 0 and 1 or 0);
+	StaticPopupDialogs["DJINNISVENDORER_CONFIRM_SELL_UNUSABLES"].showAlert = (itemsToDestroy > 0 and 1 or 0);
 	
-	StaticPopup_Show("VENDORER_CONFIRM_SELL_UNUSABLES", destroyWarning);
+	StaticPopup_Show("DJINNISVENDORER_CONFIRM_SELL_UNUSABLES", destroyWarning);
 end
 
-function VendorerAutoSellJunkButton_OnClick(self)
+function DjinnisVendorerAutoSellJunkButton_OnClick(self)
 	Addon.db.global.AutoSellJunk = self:GetChecked();
 end
 
-function VendorerAutoRepairButton_OnClick(self)
+function DjinnisVendorerAutoRepairButton_OnClick(self)
 	Addon.db.global.AutoRepair = self:GetChecked();
 end
 
-function VendorerAutoSmartRepairButton_OnClick(self)
+function DjinnisVendorerAutoSmartRepairButton_OnClick(self)
 	Addon.db.global.SmartAutoRepair = self:GetChecked();
 end
 
@@ -1836,7 +1855,7 @@ function Addon:MERCHANT_SHOW()
 
 	if(Addon:IsEnhanceQoLMerchantActive()) then
 		if(not Addon.db.global.EQoLMerchantConflictAck) then
-			StaticPopup_Show("VENDORER_EQOL_MERCHANT_CONFLICT");
+			StaticPopup_Show("DJINNISVENDORER_EQOL_MERCHANT_CONFLICT");
 		elseif(not Addon.EQoLConflictNoticedThisSession) then
 			Addon.EQoLConflictNoticedThisSession = true;
 			Addon:AddMessage("EnhanceQoL Merchant submodule active (conflict warning suppressed).");
@@ -1857,13 +1876,13 @@ function Addon:MERCHANT_SHOW()
 	end
 	
 	if(not Addon.db.global.FilteringButtonAlertShown) then
-		VendorerFilteringButtonAlert:Show();
+		DjinnisVendorerFilteringButtonAlert:Show();
 	end
 	
 	Addon.MerchantWindowOpeningTime = GetTime();
 end
 
-function VendorerFilteringButtonAlertCloseButton_OnClick()
+function DjinnisVendorerFilteringButtonAlertCloseButton_OnClick()
 	Addon.db.global.FilteringButtonAlertShown = true;
 end
 
@@ -1873,12 +1892,12 @@ function Addon:MERCHANT_CLOSED()
 	
 	Addon:ResetFilteredItems();
 	
-	if(StaticPopup_Visible("VENDORER_CONFIRM_SELL_UNUSABLES")) then
-		StaticPopup_Hide("VENDORER_CONFIRM_SELL_UNUSABLES");
+	if(StaticPopup_Visible("DJINNISVENDORER_CONFIRM_SELL_UNUSABLES")) then
+		StaticPopup_Hide("DJINNISVENDORER_CONFIRM_SELL_UNUSABLES");
 	end
 	
-	if(StaticPopup_Visible("VENDORER_CONFIRM_DESTROY_JUNK")) then
-		StaticPopup_Hide("VENDORER_CONFIRM_DESTROY_JUNK");
+	if(StaticPopup_Visible("DJINNISVENDORER_CONFIRM_DESTROY_JUNK")) then
+		StaticPopup_Hide("DJINNISVENDORER_CONFIRM_DESTROY_JUNK");
 	end
 	
 	local diff = tonumber(GetMoney() - Addon.PlayerMoney);
@@ -1894,13 +1913,13 @@ function Addon:MERCHANT_CLOSED()
 	
 	Addon:ResetAllFilters();
 	
-	HideUIPanel(VendorerItemListsFrame);
+	HideUIPanel(DjinnisVendorerItemListsFrame);
 	
-	if(VendorerStackSplitFrame:IsPurchasing()) then
-		VendorerStackSplitFrame:CancelPurchase();
+	if(DjinnisVendorerStackSplitFrame:IsPurchasing()) then
+		DjinnisVendorerStackSplitFrame:CancelPurchase();
 		Addon:AddMessage("Pending bulk purchase canceled due to merchant window being closed.");
 	end
-	VendorerStackSplitFrame:Cancel();
+	DjinnisVendorerStackSplitFrame:Cancel();
 end
 
 function Addon:TRANSMOG_COLLECTION_UPDATED()
@@ -1913,7 +1932,10 @@ function Addon:TRANSMOG_COLLECTION_UPDATED()
 	end
 end
 
-hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function() Addon:UpdateMerchantInfo() end);
+hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function()
+	Addon:UpdateMerchantInfo();
+	if(Addon.ApplyListViewVisibility) then Addon:ApplyListViewVisibility() end
+end);
 hooksecurefunc("MerchantFrame_UpdateBuybackInfo", function() Addon:UpdateBuybackInfo() end);
 
 -- Midnight (12.0) keeps pooled MerchantItem frames alive past the per-page
@@ -1951,7 +1973,7 @@ function Addon:UpdateMerchantInfo()
 	MerchantPageText:Show();
 	
 	local extension = Addon:GetCurrentExtension();
-	if(extension == VENDORER_EXTENSION_WIDE) then
+	if(extension == DJINNISVENDORER_EXTENSION_WIDE) then
 		MerchantItem11:ClearAllPoints();
 		MerchantItem11:SetPoint("TOPLEFT", MerchantItem2, "TOPRIGHT", 12, 0);
 		MerchantItem11:Show();
@@ -1971,7 +1993,7 @@ function Addon:UpdateMerchantInfo()
 			local itemButton = _G["MerchantItem"..i.."ItemButton"];
 			local merchantButton = _G["MerchantItem"..i];
 			
-			local rarityBorder = _G["VendorerMerchantItem"..i.."Rarity"];
+			local rarityBorder = _G["DjinnisVendorerMerchantItem"..i.."Rarity"];
 			if(rarityBorder) then
 				rarityBorder:Hide();
 				rarityBorder.transmogrifyAsterisk:Hide();
@@ -2078,7 +2100,7 @@ function Addon:UpdateMerchantInfo()
 	-------------------------------
 
 	local buyBackItemButton = _G["MerchantBuyBackItemItemButton"];
-	local buyBackRarityBorder = _G["VendorerMerchantBuyBackItemRarity"];
+	local buyBackRarityBorder = _G["DjinnisVendorerMerchantBuyBackItemRarity"];
 	if(buyBackRarityBorder) then
 		buyBackRarityBorder:Hide();
 		
@@ -2122,7 +2144,7 @@ function Addon:UpdateBuybackInfo()
 	for i=1, BUYBACK_ITEMS_PER_PAGE do
 		local itemButton = _G["MerchantItem"..i.."ItemButton"];
 		if(itemButton) then
-			local rarityBorder = _G["VendorerMerchantItem"..i.."Rarity"];
+			local rarityBorder = _G["DjinnisVendorerMerchantItem"..i.."Rarity"];
 			if(rarityBorder) then
 				rarityBorder:Hide();
 				rarityBorder.transmogrifyAsterisk:Hide();

@@ -56,7 +56,7 @@
 ## 2.5.1
 * Added Starlight Rosedust to default ignore list since despite being a grey item it is used for a herbalist quest and shouldn't be sold.
 * Fixed an error where items that were on the default ignore list couldn't be removed from the list.
-* Transmog asterisk option now hides the icon added by Can I Mog It. The addon doesn't support extended item list by Vendorer. If you wish you can still display the other icons by disabling the Vendorer's asterisks from the settings.
+* Transmog asterisk option now hides the icon added by Can I Mog It. The addon doesn't support extended item list by DjinnisVendorer. If you wish you can still display the other icons by disabling the DjinnisVendorer's asterisks from the settings.
 
 ## 2.5.0
 * Added an option to destroy unsellable items.
@@ -76,7 +76,7 @@
 
 ## 2.4.0
 * Added additional filter options:
-	* Prefixing a query word or a phrase with a + (a plus) will now perform an exact search. Vendorer will attempt to match a compared value exactly and discard all other results.
+	* Prefixing a query word or a phrase with a + (a plus) will now perform an exact search. DjinnisVendorer will attempt to match a compared value exactly and discard all other results.
 	* Range searching by item rarity e.g. >=rare will find all rare or better items.
 	* New magic words: canafford, transmogable, unknowntransmog. Transmog related filters require the dependency Can I Mog It.
 * Added a filters menu where you can choose common filtering options quickly.
@@ -98,7 +98,7 @@
 
 ## 2.3.0
 * Added an optional dependency for the addon **CanIMogIt** and a marker to display if an item's appearance has not yet been added to the wardrobe.
-* Added a bulk purchase system. When enabled shift-clicking merchant items will bring up the Vendorer's bulk purchase window.
+* Added a bulk purchase system. When enabled shift-clicking merchant items will bring up the DjinnisVendorer's bulk purchase window.
 	* Bulk purchase window allows buying items more than one stack at a time and shows the total price of items being purchased.
 	* Additionally you can instantly set maximum purchase or change number of items stack at a time.
 	* Optionally this feature can be disabled to use Blizzard's stock system.
@@ -109,7 +109,7 @@
 * Added a new options menu to replace some of the checkboxes.
 * Added option to paint known items and pets sold by vendors to make unknown items esaier to distinguish. You can change the color in the settings. Option is enabled by default.
 * Added a dedicated menu window for ignored item and junk item lists where you can browse the items in more detail and remove them one by one. You can open the menu by left clicking the drop areas on the side panel or by using the new slash commands.
-* Added slash commands available by typing **/vendorer** or **/vd**.
+* Added slash commands available by typing **/djinnisvendorer** or **/djv**.
 * Fixed error filtering currencies sold by vendors.
 * Made merchant frame movable.
 * Improved localization independence further.

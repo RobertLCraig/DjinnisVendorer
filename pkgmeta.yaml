@@ -1,4 +1,4 @@
-package-as: Vendorer
+package-as: DjinnisVendorer
 enable-nolib-creation: no
 
 ignore:

@@ -1,10 +1,10 @@
 ## Interface: 120000
-## Title: Vendorer
+## Title: DjinnisVendorer
 ## Notes: Improved merchant frames
 ## Author: Sonaza + Djinni
 ## Version: 4.1.0
 ## OptionalDeps: Ace3, CanIMogIt
-## SavedVariables: VendorerDB
+## SavedVariables: DjinnisVendorerDB
 
 #@no-lib-strip@
 libs\LibStub\LibStub.lua
@@ -20,6 +20,8 @@ settings.lua
 vendorfilter.lua
 autorepair.lua
 knownitems.lua
-VendorerFrames.xml
-VendorerItemListsFrame.xml
-VendorerStackSplitFrame.xml
+DjinnisVendorerFrames.xml
+DjinnisVendorerItemListsFrame.xml
+DjinnisVendorerStackSplitFrame.xml
+DjinnisVendorerListView.lua
+DjinnisVendorerListView.xml

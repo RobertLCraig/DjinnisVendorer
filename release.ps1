@@ -13,7 +13,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root             = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$AddonName        = "Vendorer"
+$AddonName        = "DjinnisVendorer"
 $TocFile          = Join-Path $Root "$AddonName.toc"
 $ReleaseNotesFile = Join-Path $Root "RELEASE_NOTES.md"
 $ChangelogFile    = Join-Path $Root "CHANGELOG.md"
@@ -57,7 +57,7 @@ $Version = $versionMatch.Groups[1].Value.TrimStart('v')
 $Tag     = Make-Tag $Version $ReleaseType
 
 Write-Info ""
-Write-Info "=== Vendorer Release: $Tag ($ReleaseType) ==="
+Write-Info "=== DjinnisVendorer Release: $Tag ($ReleaseType) ==="
 if ($DryRun) { Write-Warn "  DRY RUN - no files will be written, committed, tagged, or pushed" }
 Write-Info ""
 
@@ -205,7 +205,7 @@ $ExcludeNames = @(
     "releases"
 )
 
-$ZipName = "Vendorer-$Tag.zip"
+$ZipName = "DjinnisVendorer-$Tag.zip"
 $ZipPath = Join-Path $OutputDir $ZipName
 
 if (-not $DryRun) {
@@ -309,7 +309,7 @@ if (-not $ghAvailable) {
     [System.IO.File]::WriteAllText($tmpNotes, $notesBody, (New-Object System.Text.UTF8Encoding $false))
 
     # Attach zip with a versioned display label (shown as download filename on the release page)
-    $ZipLabel  = "Vendorer-$Tag.zip"
+    $ZipLabel  = "DjinnisVendorer-$Tag.zip"
     $ZipAsset  = "${ZipPath}#${ZipLabel}"
 
     $ghArgs = @(
@@ -327,7 +327,7 @@ if (-not $ghAvailable) {
     Remove-Item $tmpNotes -Force
 
     if ($LASTEXITCODE -eq 0) {
-        Write-Success "  GitHub Release created: https://github.com/RobertLCraig/Vendorer/releases/tag/$Tag"
+        Write-Success "  GitHub Release created: https://github.com/RobertLCraig/DjinnisVendorer/releases/tag/$Tag"
     } else {
         Write-Warn "  gh release create failed (exit $LASTEXITCODE) -- create it manually:"
         Write-Warn "    & '$GhExe' release create $Tag '$ZipPath' --title '$Tag' --notes-file RELEASE_NOTES.md"
@@ -343,7 +343,7 @@ Write-Success "=== Release $Tag complete! ==="
 Write-Info ""
 Write-Info "  Local zip:  $ZipPath"
 if (-not $DryRun -and -not $SkipPush -and -not $SkipTag) {
-    Write-Info "  GitHub:     https://github.com/RobertLCraig/Vendorer/releases/tag/$Tag"
+    Write-Info "  GitHub:     https://github.com/RobertLCraig/DjinnisVendorer/releases/tag/$Tag"
     Write-Info "  CurseForge: packaging triggered by pushed tag (file type: $ReleaseType)"
 }
 Write-Info ""

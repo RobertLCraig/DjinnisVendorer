@@ -1,0 +1,128 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+
+	<Button name="DjinnisVendorerListRowTemplate" virtual="true" registerForClicks="LeftButtonUp,RightButtonUp">
+		<Size x="280" y="40"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="bg" setAllPoints="true">
+					<Color r="1" g="1" b="1" a="0.04"/>
+				</Texture>
+				<Texture parentKey="separator" hidden="true">
+					<Size x="0" y="1"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="0" y="0"/>
+						<Anchor point="TOPRIGHT" x="0" y="0"/>
+					</Anchors>
+					<Color r="1" g="0.82" b="0" a="0.6"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString parentKey="costText" inherits="NumberFontNormalSmall" justifyH="RIGHT" justifyV="MIDDLE">
+					<Size x="160" y="14"/>
+					<Anchors>
+						<Anchor point="RIGHT" x="-4" y="0"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="nameText" inherits="GameFontHighlightSmall" justifyH="LEFT" justifyV="TOP" maxLines="2" nonspacewrap="true">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="34" y="-3"/>
+						<Anchor point="TOPRIGHT" relativeKey="$parent.costText" relativePoint="TOPLEFT" x="-6" y="0"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="info" inherits="GameFontDisableSmall" justifyH="LEFT" justifyV="MIDDLE">
+					<Size y="10"/>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" x="34" y="3"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.costText" relativePoint="BOTTOMLEFT" x="-6" y="0"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button parentKey="iconButton" enableMouse="false">
+				<Size x="26" y="26"/>
+				<Anchors>
+					<Anchor point="LEFT" x="2" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture parentKey="icon" setAllPoints="true"/>
+					</Layer>
+					<Layer level="ARTWORK">
+						<FontString parentKey="count" inherits="NumberFontNormalSmall" justifyH="RIGHT">
+							<Anchors>
+								<Anchor point="BOTTOMRIGHT" x="-1" y="1"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+					<Layer level="OVERLAY">
+						<Texture parentKey="border" file="Interface\Common\WhiteIconFrame">
+							<Size x="30" y="30"/>
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+							<Color r="0.6" g="0.6" b="0.6" a="0.85"/>
+						</Texture>
+						<Texture parentKey="transmogAsterisk" file="Interface\AddOns\DjinnisVendorer\media\TransmogrifyAsterisk" hidden="true">
+							<Size x="11" y="11"/>
+							<Anchors>
+								<Anchor point="CENTER" relativePoint="TOPRIGHT" x="-2" y="-2"/>
+							</Anchors>
+							<TexCoords left="0" right="0.5" top="0" bottom="1"/>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Button>
+		</Frames>
+		<HighlightTexture file="Interface\Buttons\UI-Listbox-Highlight" alphaMode="ADD" setAllPoints="true">
+			<Color r="1" g="1" b="1" a="0.5"/>
+		</HighlightTexture>
+		<Scripts>
+			<OnLoad function="DjinnisVendorerListRow_OnLoad"/>
+			<OnClick function="DjinnisVendorerListRow_OnClick"/>
+			<OnEnter function="DjinnisVendorerListRow_OnEnter"/>
+			<OnLeave function="DjinnisVendorerListRow_OnLeave"/>
+		</Scripts>
+	</Button>
+
+	<Frame name="DjinnisVendorerListViewFrame" parent="MerchantFrame" hidden="true">
+		<Anchors>
+			<Anchor point="TOPLEFT" relativeTo="MerchantFrame" relativePoint="TOPLEFT" x="14" y="-72"/>
+			<Anchor point="BOTTOMRIGHT" relativeTo="MerchantFrame" relativePoint="BOTTOMRIGHT" x="-14" y="100"/>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture setAllPoints="true">
+					<Color r="0" g="0" b="0" a="0.55"/>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString parentKey="emptyText" inherits="GameFontDisable" justifyH="CENTER" text="No items to display.">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame parentKey="scrollBox" inherits="WowScrollBoxList">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="22" y="-4"/>
+					<Anchor point="BOTTOMRIGHT" x="-4" y="4"/>
+				</Anchors>
+			</Frame>
+			<EventFrame parentKey="scrollBar" inherits="MinimalScrollBar">
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeKey="$parent.scrollBox" relativePoint="TOPLEFT" x="-6" y="0"/>
+					<Anchor point="BOTTOMRIGHT" relativeKey="$parent.scrollBox" relativePoint="BOTTOMLEFT" x="-6" y="0"/>
+				</Anchors>
+			</EventFrame>
+		</Frames>
+		<Scripts>
+			<OnLoad function="DjinnisVendorerListViewFrame_OnLoad"/>
+			<OnShow function="DjinnisVendorerListViewFrame_OnShow"/>
+		</Scripts>
+	</Frame>
+
+</Ui>

@@ -1,8 +1,8 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
-	<Script file="VendorerStackSplitFrame.lua"/>
+	<Script file="DjinnisVendorerStackSplitFrame.lua"/>
 	
-	<Font name="VendorerNumberFont" font="Interface\AddOns\Vendorer\media\DORISPP.TTF" virtual="true">
+	<Font name="DjinnisVendorerNumberFont" font="Interface\AddOns\DjinnisVendorer\media\DORISPP.TTF" virtual="true">
 		<Shadow>
 			<Offset>
 				<AbsDimension x="0" y="-1"/>
@@ -15,7 +15,7 @@
 		<Color r="1" g="1" b="1"/>
 	</Font>
 	
-	<Frame name="VendorerStackSplitFrame" mixin="VendorerStackSplitMixin" frameStrata="HIGH" parent="UIParent"
+	<Frame name="DjinnisVendorerStackSplitFrame" mixin="DjinnisVendorerStackSplitMixin" frameStrata="HIGH" parent="UIParent"
 		   toplevel="true" enableMouse="true" enableKeyboard="true" hidden="true" clampedToScreen="true">
 		<Size x="166" y="128"/>
 		<Anchors>
@@ -23,17 +23,17 @@
 		</Anchors>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture parentKey="background" file="Interface\AddOns\Vendorer\media\StackSplit" setAllPoints="true">
+				<Texture parentKey="background" file="Interface\AddOns\DjinnisVendorer\media\StackSplit" setAllPoints="true">
 					<TexCoords left="0.01171875" right="0.66015625" top="0" bottom="1"/>
 				</Texture>
 			</Layer>
 			<Layer level="BORDER">
-				<FontString name="$parentSplitNumber" parentKey="splitNumber" inherits="VendorerNumberFont" text="1337" justifyH="RIGHT">
+				<FontString name="$parentSplitNumber" parentKey="splitNumber" inherits="DjinnisVendorerNumberFont" text="1337" justifyH="RIGHT">
 					<Anchors>
 						<Anchor point="RIGHT" relativeTo="$parent" relativePoint="TOPRIGHT" x="-29" y="-31"/>
 					</Anchors>
 				</FontString>
-				<FontString name="$parentTotalCost" parentKey="totalCost" inherits="VendorerNumberFont" text=" " justifyH="CENTER">
+				<FontString name="$parentTotalCost" parentKey="totalCost" inherits="DjinnisVendorerNumberFont" text=" " justifyH="CENTER">
 					<Anchors>
 						<Anchor point="TOP" relativeTo="$parent" relativePoint="TOP" x="3" y="-46"/>
 					</Anchors>
@@ -69,7 +69,7 @@
 				<PushedTexture file="Interface\MoneyFrame\Arrow-Right-Down"/>
 				<DisabledTexture file="Interface\MoneyFrame\Arrow-Right-Disabled"/>
 			</Button>
-			<Button name="$parentOkayButton" parentKey="okayButton" inherits="VendorerPanelButtonTemplate" text="OKAY">
+			<Button name="$parentOkayButton" parentKey="okayButton" inherits="DjinnisVendorerPanelButtonTemplate" text="OKAY">
 				<Size x="64" y="24"/>
 				<Anchors>
 					<Anchor point="RIGHT" relativePoint="BOTTOM" x="-1" y="30"/>
@@ -80,7 +80,7 @@
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button name="$parentCancelButton" inherits="VendorerPanelButtonTemplate" text="CANCEL">
+			<Button name="$parentCancelButton" inherits="DjinnisVendorerPanelButtonTemplate" text="CANCEL">
 				<Size x="64" y="24"/>
 				<Anchors>
 					<Anchor point="LEFT" relativePoint="BOTTOM" x="3" y="30"/>
@@ -91,7 +91,7 @@
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button name="$parentSetMaxButton" parentKey="setMax" inherits="VendorerPanelButtonTemplate" text="Max">
+			<Button name="$parentSetMaxButton" parentKey="setMax" inherits="DjinnisVendorerPanelButtonTemplate" text="Max">
 				<Size x="64" y="24"/>
 				<Anchors>
 					<Anchor point="RIGHT" relativePoint="BOTTOM" x="-1" y="55"/>
@@ -103,11 +103,11 @@
 					<OnClick>
 						self:GetParent():SetMax(button);
 					</OnClick>
-					<OnEnter function="VendorerStackSplitFrameSetMaxButton_OnEnter"/>
+					<OnEnter function="DjinnisVendorerStackSplitFrameSetMaxButton_OnEnter"/>
 					<OnLeave function="GameTooltip_Hide"/>
 				</Scripts>
 			</Button>
-			<Button name="$parentStackButton" inherits="VendorerPanelButtonTemplate" text="Stack">
+			<Button name="$parentStackButton" inherits="DjinnisVendorerPanelButtonTemplate" text="Stack">
 				<Size x="64" y="24"/>
 				<Anchors>
 					<Anchor point="LEFT" relativePoint="BOTTOM" x="3" y="55"/>
@@ -116,15 +116,15 @@
 					<OnLoad>
 						self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
 					</OnLoad>
-					<OnClick function="VendorerStackSplitFrameStackButton_OnClick"/>
-					<OnEnter function="VendorerStackSplitFrameStackButton_OnEnter"/>
+					<OnClick function="DjinnisVendorerStackSplitFrameStackButton_OnClick"/>
+					<OnEnter function="DjinnisVendorerStackSplitFrameStackButton_OnEnter"/>
 					<OnLeave function="GameTooltip_Hide"/>
 				</Scripts>
 			</Button>
 			<Frame name="$parentPleaseWait" parentKey="waiting" setAllPoints="true" enableMouse="true" hidden="true">
 				<Layers>
 					<Layer level="BACKGROUND">
-						<Texture file="Interface\AddOns\Vendorer\media\StackSplit" setAllPoints="true">
+						<Texture file="Interface\AddOns\DjinnisVendorer\media\StackSplit" setAllPoints="true">
 							<TexCoords left="0.01171875" right="0.66015625" top="0" bottom="1"/>
 							<Color r="0" g="0" b="0" a="0.5"/>
 						</Texture>

@@ -373,6 +373,10 @@ function Addon:OnInitialize()
 			-- "name", "price", or "quality". Applied per segment so matches
 			-- stay above non-matches.
 			ListViewSortKey = "default",
+			-- Per-row info toggles for the list view.
+			ListViewShowStackSize = true,
+			ListViewShowBindType = false,
+			ListViewShowRepDiscount = false,
 
 			ExpandTutorialShown = false,
 			FilteringButtonAlertShown = false,
@@ -573,7 +577,10 @@ end
 
 function Addon:EnhanceMerchantFrame()
 	local extension = Addon:GetCurrentExtension();
-	
+
+	-- Both Wide and Narrow keep the side panel inside MerchantFrame, so the
+	-- page/currency widgets need shifting left to clear it whenever the
+	-- extension is shown.
 	local offset = 0;
 	if(extension ~= DJINNISVENDORER_EXTENSION_NONE) then
 		offset = 164;
@@ -662,27 +669,60 @@ end
 
 function Addon:ShowExtensionPanel()
 	local extension = Addon:GetCurrentExtension();
-	
-	if(extension == DJINNISVENDORER_EXTENSION_WIDE) then
-		MerchantFrame:SetWidth(834);
-		-- Midnight (12.0) only ships 12 static MerchantItem frames. Going past
-		-- 12 makes Blizzard's own MerchantFrame_UpdateMerchantInfo crash on a
-		-- nil _G["MerchantItem"..i] lookup.
-		Addon:SetMerchantItemsPerPage(12);
+	local listOn = Addon.db and Addon.db.global and Addon.db.global.ListViewEnabled;
 
+	-- Side panel anchoring. Wide mode and list view both keep the panel inside
+	-- MerchantFrame's right edge; plain Narrow keeps it detached outside.
+	-- Narrow art is 210x441 unscaled at scale 0.8 (= 168 effective).
+	DjinnisVendorerMerchantFrameExtension:ClearAllPoints();
+
+	if(extension == DJINNISVENDORER_EXTENSION_WIDE) then
+		-- Wide keeps the original behaviour: extension widens MerchantFrame
+		-- to fit two extra item columns inside, side panel stays at its
+		-- right edge. Midnight (12.0) only ships 12 static MerchantItem
+		-- frames; going past 12 crashes Blizzard's MerchantFrame_UpdateMerchantInfo.
+		MerchantFrame:SetWidth(834);
+		Addon:SetMerchantItemsPerPage(12);
+		DjinnisVendorerMerchantFrameExtension:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", -10, -79);
 		DjinnisVendorerMerchantFrameExtension:Show();
 		DjinnisVendorerMerchantFrameExtensionNarrow:Hide();
 		DjinnisVendorerMerchantFrameExtensionWide:Show();
 	elseif(extension == DJINNISVENDORER_EXTENSION_NARROW) then
-		MerchantFrame:SetWidth(500);
+		-- Both list view and grid view widen MerchantFrame so the side panel
+		-- can sit visually attached inside the right edge. List view needs more
+		-- room for the cost columns + names; grid view uses the original 500.
+		MerchantFrame:SetWidth(listOn and 600 or 500);
 		Addon:SetMerchantItemsPerPage(10);
-
+		DjinnisVendorerMerchantFrameExtension:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", -10, -79);
 		DjinnisVendorerMerchantFrameExtension:Show();
 		DjinnisVendorerMerchantFrameExtensionNarrow:Show();
 		DjinnisVendorerMerchantFrameExtensionWide:Hide();
 	end
-	
+
 	DjinnisVendorerExtensionFrameItems:Show();
+
+	-- Reserve space on the right of the list view for the inside-attached panel.
+	if(DjinnisVendorerListViewFrame) then
+		DjinnisVendorerListViewFrame:ClearAllPoints();
+		DjinnisVendorerListViewFrame:SetPoint("TOPLEFT", MerchantFrame, "TOPLEFT", 14, -72);
+		if(listOn) then
+			DjinnisVendorerListViewFrame:SetPoint("BOTTOMRIGHT", MerchantFrame, "BOTTOMRIGHT", -180, 100);
+		else
+			DjinnisVendorerListViewFrame:SetPoint("BOTTOMRIGHT", MerchantFrame, "BOTTOMRIGHT", -14, 100);
+		end
+	end
+
+	-- Toggle buttons (< >) sit just to the left of the inside-attached side panel.
+	-- List view forces Narrow and has no use for these toggles.
+	if(DjinnisVendorerToggleExtensionFrameButtons) then
+		if(listOn) then
+			DjinnisVendorerToggleExtensionFrameButtons:Hide();
+		else
+			DjinnisVendorerToggleExtensionFrameButtons:Show();
+			DjinnisVendorerToggleExtensionFrameButtons:ClearAllPoints();
+			DjinnisVendorerToggleExtensionFrameButtons:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", -220, -29);
+		end
+	end
 end
 
 function Addon:HideExtensionPanel()
@@ -1848,6 +1888,7 @@ end
 function Addon:MERCHANT_SHOW()
 	Addon.MerchantSellError = false;
 	Addon.MerchantNpcId = nil;
+	Addon.MerchantDiscount = nil;
 
 	Addon:ResetFilteredItems();
 	Addon:ResetFilter(Addon:GetPersistedFilterText());
@@ -1889,6 +1930,7 @@ end
 function Addon:MERCHANT_CLOSED()
 	Addon.MerchantSellError = false;
 	Addon.MerchantNpcId = nil;
+	Addon.MerchantDiscount = nil;
 	
 	Addon:ResetFilteredItems();
 	

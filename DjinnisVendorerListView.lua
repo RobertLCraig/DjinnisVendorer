@@ -45,40 +45,140 @@ local function rawGetCostItem(index, costIndex)
 end
 
 ------------------------------------------------------------
--- Cost text
+-- Bind type + reputation discount helpers
 ------------------------------------------------------------
 
-local function FormatMoneyShort(copper)
-	if(not copper or copper <= 0) then return "" end
-	local g = math.floor(copper / 10000);
-	local s = math.floor((copper % 10000) / 100);
-	local c = copper % 100;
-	local parts = {};
-	if(g > 0) then tinsert(parts, g .. "|cffffd700g|r") end
-	if(s > 0) then tinsert(parts, s .. "|cffc7c7cfs|r") end
-	if(c > 0 and g == 0) then tinsert(parts, c .. "|cffeda55fc|r") end
-	return table.concat(parts, " ");
+-- Mirrors the BT_* constants in core.lua; ScanBindType returns these.
+local BIND_TYPE_LABEL = {
+	[1] = "BoP",
+	[2] = "BoE",
+	[3] = "BoA",
+	[4] = "BoU",
+	[5] = "Quest",
+};
+
+local function GetBindTypeLabel(link)
+	if(not link or not Addon.GetItemTooltipInfo) then return nil end
+	local bindType = Addon:GetItemTooltipInfo(link);
+	return BIND_TYPE_LABEL[bindType];
 end
 
-local function BuildCostText(rawIndex, price, hasExtendedCost)
-	local segments = {};
+-- Standing -> discount %, matching Blizzard's reputation-discount table.
+-- Standing IDs: 5=Friendly, 6=Honored, 7=Revered, 8=Exalted.
+local STANDING_DISCOUNT = { [5] = 5, [6] = 10, [7] = 15, [8] = 20 };
 
-	if(price and price > 0) then
-		tinsert(segments, FormatMoneyShort(price));
+local function CollectPlayerFactionStandings()
+	local map = {};
+	local count;
+	if(C_Reputation and C_Reputation.GetNumFactions) then
+		count = C_Reputation.GetNumFactions();
+	elseif(GetNumFactions) then
+		count = GetNumFactions();
 	end
+	if(not count or count == 0) then return map end
 
-	if(hasExtendedCost) then
-		local numCost = rawGetCostInfo(rawIndex) or 0;
-		for i = 1, numCost do
-			local texture, value, link, currencyName = rawGetCostItem(rawIndex, i);
-			if(value and value > 0 and texture) then
-				tinsert(segments, string.format("%d|T%s:14:14:0:0|t", value, texture));
+	for i = 1, count do
+		local name, standingID;
+		if(C_Reputation and C_Reputation.GetFactionDataByIndex) then
+			local data = C_Reputation.GetFactionDataByIndex(i);
+			if(data and not data.isHeader) then
+				name = data.name;
+				standingID = data.reaction;
+			end
+		else
+			local n, _, sID, _, _, _, _, _, isHeader = GetFactionInfo(i);
+			if(not isHeader) then
+				name, standingID = n, sID;
+			end
+		end
+		if(name and standingID) then
+			map[name] = standingID;
+		end
+	end
+	return map;
+end
+
+local function ComputeMerchantDiscount()
+	if(not UnitExists("npc")) then return nil end
+	local standings = CollectPlayerFactionStandings();
+	if(not next(standings)) then return nil end
+
+	DjinnisVendorerTooltip:ClearLines();
+	DjinnisVendorerTooltip:SetOwner(UIParent, "ANCHOR_NONE");
+	DjinnisVendorerTooltip:SetUnit("npc");
+	local discount;
+	for line = 1, DjinnisVendorerTooltip:NumLines() do
+		local left = _G["DjinnisVendorerTooltipTextLeft" .. line];
+		local text = left and left:GetText();
+		if(text) then
+			local standing = standings[text];
+			if(standing and STANDING_DISCOUNT[standing]) then
+				discount = STANDING_DISCOUNT[standing];
+				break;
 			end
 		end
 	end
+	DjinnisVendorerTooltip:Hide();
+	return discount;
+end
 
-	if(#segments == 0) then return "" end
-	return table.concat(segments, "  ");
+local function GetMerchantDiscount()
+	if(Addon.MerchantDiscount ~= nil) then
+		return Addon.MerchantDiscount or nil;
+	end
+	local discount = ComputeMerchantDiscount();
+	Addon.MerchantDiscount = discount or false;
+	return discount;
+end
+
+------------------------------------------------------------
+-- Cost text
+------------------------------------------------------------
+
+local function PopulateMoneyColumns(row, copper)
+	if(not copper or copper <= 0) then
+		row.goldText:SetText("");
+		row.silverText:SetText("");
+		row.copperText:SetText("");
+		return;
+	end
+	local g = math.floor(copper / 10000);
+	local s = math.floor((copper % 10000) / 100);
+	local c = copper % 100;
+	-- BreakUpLargeNumbers adds locale-appropriate digit separators so 8-figure
+	-- gold prices (10,000,000+) stay legible instead of running together.
+	local goldStr = (g > 0) and (BreakUpLargeNumbers(g) .. "|cffffd700g|r") or "";
+	row.goldText:SetText(goldStr);
+	row.silverText:SetText(s > 0 and (s .. "|cffc7c7cfs|r") or "");
+	row.copperText:SetText(c > 0 and (c .. "|cffeda55fc|r") or "");
+end
+
+local function FormatExtendedCost(rawIndex)
+	local segments = {};
+	local numCost = rawGetCostInfo(rawIndex) or 0;
+	for i = 1, numCost do
+		local texture, value, link, currencyName = rawGetCostItem(rawIndex, i);
+		if(value and value > 0 and texture) then
+			tinsert(segments, string.format("%d|T%s:14:14:0:0|t", value, texture));
+		end
+	end
+	return table.concat(segments, " ");
+end
+
+local function PopulateStackText(row, stack)
+	if(Addon.db.global.ListViewShowStackSize and stack and stack > 1) then
+		row.stackText:SetText("|cff808080x" .. stack .. "|r");
+	else
+		row.stackText:SetText("");
+	end
+end
+
+local function ClearCostColumns(row)
+	row.goldText:SetText("");
+	row.silverText:SetText("");
+	row.copperText:SetText("");
+	row.costText:SetText("");
+	row.stackText:SetText("");
 end
 
 ------------------------------------------------------------
@@ -179,6 +279,7 @@ end
 
 function DjinnisVendorerListRow_OnEnter(self)
 	if(not self.data or self.data.kind ~= KIND_ITEM) then return end
+	SetCursor("BUY_CURSOR");
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 	rawSetTooltipMerchantItem(GameTooltip, self.data.rawIndex);
 	-- Show comparison tooltips for equippable items (held by default; ALT
@@ -191,6 +292,7 @@ function DjinnisVendorerListRow_OnEnter(self)
 end
 
 function DjinnisVendorerListRow_OnLeave(self)
+	ResetCursor();
 	GameTooltip:Hide();
 	if(ShoppingTooltip1) then ShoppingTooltip1:Hide() end
 	if(ShoppingTooltip2) then ShoppingTooltip2:Hide() end
@@ -234,7 +336,7 @@ local function ApplyDecorations(row, data)
 	row.iconButton.border:SetVertexColor(r, g, b, 0.95);
 	row.nameText:SetTextColor(r, g, b);
 
-	-- Subtext: type + slot + iLvl
+	-- Subtext: type + slot + iLvl + optional bind type + optional rep discount
 	local infoBits = {};
 	if(itemEquipLoc and itemEquipLoc ~= "" and _G[itemEquipLoc]) then
 		tinsert(infoBits, _G[itemEquipLoc]);
@@ -245,6 +347,18 @@ local function ApplyDecorations(row, data)
 	local _, _, _, itemLevel = GetItemInfo(link);
 	if(itemLevel and itemLevel > 1) then
 		tinsert(infoBits, "iLvl " .. itemLevel);
+	end
+	if(Addon.db.global.ListViewShowBindType) then
+		local bindLabel = GetBindTypeLabel(link);
+		if(bindLabel) then
+			tinsert(infoBits, bindLabel);
+		end
+	end
+	if(Addon.db.global.ListViewShowRepDiscount and data.price and data.price > 0) then
+		local discount = GetMerchantDiscount();
+		if(discount and discount > 0) then
+			tinsert(infoBits, "|cff73ce2f-" .. discount .. "%|r");
+		end
 	end
 	row.info:SetText(table.concat(infoBits, "  "));
 
@@ -294,7 +408,7 @@ local function InitializeRow(row, data)
 		row.separator:Show();
 		row.nameText:SetText("");
 		row.info:SetText("");
-		row.costText:SetText("");
+		ClearCostColumns(row);
 		row.iconButton:Hide();
 		row:Disable();
 		row:SetAlpha(1);
@@ -315,7 +429,19 @@ local function InitializeRow(row, data)
 	end
 
 	row.nameText:SetText(data.name or "");
-	row.costText:SetText(BuildCostText(data.rawIndex, data.price, data.hasExtendedCost));
+
+	-- Cost: gold-priced items use the g/s/c columns; extended-cost items
+	-- (currency tokens) use costText, which overlays the same area.
+	PopulateStackText(row, data.stack);
+	if(data.hasExtendedCost) then
+		row.goldText:SetText("");
+		row.silverText:SetText("");
+		row.copperText:SetText("");
+		row.costText:SetText(FormatExtendedCost(data.rawIndex));
+	else
+		row.costText:SetText("");
+		PopulateMoneyColumns(row, data.price);
+	end
 
 	ApplyDecorations(row, data);
 

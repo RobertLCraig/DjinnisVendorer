@@ -726,7 +726,11 @@ hooksecurefunc("MerchantFrame_Update", function()
 		if filterDropdown then
 			filterDropdown:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", -35, -28);
 		end
-		DjinnisVendorerToggleExtensionFrameButtons:Show();
+		-- ShowExtensionPanel hides these in list view; don't undo that here.
+		local listOn = Addon.db and Addon.db.global and Addon.db.global.ListViewEnabled;
+		if(not listOn) then
+			DjinnisVendorerToggleExtensionFrameButtons:Show();
+		end
 		if(Addon.ApplyListViewVisibility) then Addon:ApplyListViewVisibility() end
 	else
 		MerchantFrame_UpdateBuybackInfo();

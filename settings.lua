@@ -304,6 +304,7 @@ function Addon:GetMenuData()
 			text = "Vertical list view",
 			func = function()
 				self.db.global.ListViewEnabled = not self.db.global.ListViewEnabled;
+				self:UpdateExtensionPanel();
 				if(MerchantFrame and MerchantFrame:IsShown() and MerchantFrame.selectedTab == 1) then
 					MerchantFrame_Update();
 				end
@@ -337,6 +338,52 @@ function Addon:GetMenuData()
 						self.db.global.ListViewHideNonMatches = true;
 						if(Addon.RefreshListView) then Addon:RefreshListView() end
 					end,
+				},
+			},
+		},
+		{
+			text = "List row info",
+			notCheckable = true,
+			hasArrow = true,
+			menuList = {
+				{
+					text = "Show stack size",
+					isNotRadio = true,
+					checked = function() return self.db.global.ListViewShowStackSize; end,
+					func = function()
+						self.db.global.ListViewShowStackSize = not self.db.global.ListViewShowStackSize;
+						if(Addon.RefreshListView) then Addon:RefreshListView() end
+					end,
+					tooltipTitle = "Show stack size",
+					tooltipText = "Display the merchant stack size (e.g. x5) on the right side of each row.",
+					tooltipOnButton = 1,
+					keepShownOnClick = 1,
+				},
+				{
+					text = "Show bind type",
+					isNotRadio = true,
+					checked = function() return self.db.global.ListViewShowBindType; end,
+					func = function()
+						self.db.global.ListViewShowBindType = not self.db.global.ListViewShowBindType;
+						if(Addon.RefreshListView) then Addon:RefreshListView() end
+					end,
+					tooltipTitle = "Show bind type",
+					tooltipText = "Append BoP, BoE, BoA, BoU or Quest to each row's subtitle when known.",
+					tooltipOnButton = 1,
+					keepShownOnClick = 1,
+				},
+				{
+					text = "Show reputation discount",
+					isNotRadio = true,
+					checked = function() return self.db.global.ListViewShowRepDiscount; end,
+					func = function()
+						self.db.global.ListViewShowRepDiscount = not self.db.global.ListViewShowRepDiscount;
+						if(Addon.RefreshListView) then Addon:RefreshListView() end
+					end,
+					tooltipTitle = "Show reputation discount",
+					tooltipText = "Show the reputation discount applied at this merchant (e.g. -10%) on each gold-priced row. Detection relies on the merchant's faction appearing in your reputation panel.",
+					tooltipOnButton = 1,
+					keepShownOnClick = 1,
 				},
 			},
 		},

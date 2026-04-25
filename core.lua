@@ -12,14 +12,14 @@ local AceDB = LibStub("AceDB-3.0");
 local _;
 
 -- Get some localized strings
-local LOCALIZED_CLOTH           = GetItemSubClassInfo(4, 1);
-local LOCALIZED_LEATHER         = GetItemSubClassInfo(4, 2);
-local LOCALIZED_MAIL            = GetItemSubClassInfo(4, 3);
-local LOCALIZED_PLATE           = GetItemSubClassInfo(4, 4);
-local LOCALIZED_ARMOR           = GetItemClassInfo(4);
-local LOCALIZED_COSMETIC        = GetItemSubClassInfo(4, 5);
-local LOCALIZED_MISCELLANEOUS   = GetItemClassInfo(15);
-local LOCALIZED_RECIPE          = GetItemClassInfo(9);
+local LOCALIZED_CLOTH           = C_Item.GetItemSubClassInfo(4, 1);
+local LOCALIZED_LEATHER         = C_Item.GetItemSubClassInfo(4, 2);
+local LOCALIZED_MAIL            = C_Item.GetItemSubClassInfo(4, 3);
+local LOCALIZED_PLATE           = C_Item.GetItemSubClassInfo(4, 4);
+local LOCALIZED_ARMOR           = C_Item.GetItemClassInfo(4);
+local LOCALIZED_COSMETIC        = C_Item.GetItemSubClassInfo(4, 5);
+local LOCALIZED_MISCELLANEOUS   = C_Item.GetItemClassInfo(15);
+local LOCALIZED_RECIPE          = C_Item.GetItemClassInfo(9);
 
 DJINNISVENDORER_IGNORE_ITEMS_BUTTON_TEXT = "Ignore Items";
 DJINNISVENDORER_ADD_JUNK_BUTTON_TEXT = "Add Junk Items";
@@ -458,7 +458,7 @@ function Addon:RegisterTooltip(tooltip)
 			TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(self, data)
 				if self ~= GameTooltip and self ~= ItemRefTooltip then return end
 				local _, link = TooltipUtil.GetDisplayedItem(self);
-				if(link and GetItemInfo(link)) then
+				if(link and C_Item.GetItemInfo(link)) then
 					Addon:AddTooltipInfo(self, link);
 				end
 			end);
@@ -475,7 +475,7 @@ function Addon:RegisterTooltip(tooltip)
 		if(modified) then return end
 		modified = true;
 		local name, link = self:GetItem();
-		if(link and GetItemInfo(link)) then
+		if(link and C_Item.GetItemInfo(link)) then
 			Addon:AddTooltipInfo(self, link);
 		end
 	end);
@@ -869,10 +869,10 @@ function Addon:ScanContainers(filter)
 	local foundItems = {};
 	
 	for bagIndex = 0, 4 do
-		local numSlots = GetContainerNumSlots(bagIndex);
+		local numSlots = C_Container.GetContainerNumSlots(bagIndex);
 		if(numSlots > 0) then
 			for slotIndex = 1, numSlots do
-				local link = GetContainerItemLink(bagIndex, slotIndex);
+				local link = C_Container.GetContainerItemLink(bagIndex, slotIndex);
 				local itemID = link and Addon:GetItemID(link) or 0;
 				if(link and not Addon:IsItemIgnored(itemID)) then
 					local result, data = filter(bagIndex, slotIndex);
@@ -893,11 +893,14 @@ end
 
 local function FilterJunkItems(bagIndex, slotIndex)
 	if(not bagIndex or not slotIndex) then return false end
-	
-	local texture, itemCount, locked, quality, readable, lootable, itemLink, isFiltered = GetContainerItemInfo(bagIndex, slotIndex);
+
+	local info = C_Container.GetContainerItemInfo(bagIndex, slotIndex);
+	local itemLink = info and info.hyperlink;
+	local itemCount = info and info.stackCount;
+	local quality = info and info.quality;
 	if(itemLink) then
 		local itemName, _, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
-			itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(itemLink);
+			itemEquipLoc, itemTexture, itemSellPrice = C_Item.GetItemInfo(itemLink);
 			
 		if(not itemName) then return false end
 		
@@ -983,7 +986,7 @@ function Addon:GetItemTooltipInfo(item)
 	if(Addon:IsCurrencyItem(item)) then
 		itemLink = item;
 	else
-		_, itemLink, itemRarity, _, _, itemType, itemSubType, _, itemEquipLoc = GetItemInfo(item);
+		_, itemLink, itemRarity, _, _, itemType, itemSubType, _, itemEquipLoc = C_Item.GetItemInfo(item);
 	end
 	if(not itemLink) then return end
 		
@@ -994,7 +997,7 @@ function Addon:GetItemTooltipInfo(item)
 	local bindType, isUsable, isClassArmorType, notUsableReason;
 	local isUnique = false;
 	
-	if(IsEquippableItem(itemLink) and Addon:IsArmorItemSlot(itemEquipLoc)) then
+	if(C_Item.IsEquippableItem(itemLink) and Addon:IsArmorItemSlot(itemEquipLoc)) then
 		if(itemSubType == LOCALIZED_COSMETIC or itemSubType == LOCALIZED_MISCELLANEOUS or Addon:IsValidClassArmorType(itemSubType)) then
 			isClassArmorType = true;
 		else
@@ -1031,7 +1034,7 @@ function Addon:GetItemTooltipInfo(item)
 			bindType = Addon:ScanBindType(left:GetText());
 		end
 		
-		if(IsEquippableItem(itemLink)) then
+		if(C_Item.IsEquippableItem(itemLink)) then
 			if(left:GetText() == itemType and Addon:IsRedText(left)) then
 				if(isUsable and not notUsableReason) then notUsableReason = NOT_USABLE_TYPE end
 				isUsable = false;
@@ -1070,7 +1073,7 @@ function Addon:GetItemTooltipInfo(item)
 		end
 	end
 	
-	if(not tooltipItemType and IsEquippableItem(itemLink)) then
+	if(not tooltipItemType and C_Item.IsEquippableItem(itemLink)) then
 		tooltipItemType = itemSubType;
 	end
 	
@@ -1083,11 +1086,13 @@ end
 
 local function FilterUnusableItems(bagIndex, slotIndex)
 	if(not bagIndex or not slotIndex) then return false end
-	
-	local texture, itemCount, locked, quality, readable, lootable, itemLink, isFiltered = GetContainerItemInfo(bagIndex, slotIndex);
+
+	local info = C_Container.GetContainerItemInfo(bagIndex, slotIndex);
+	local itemLink = info and info.hyperlink;
+	local itemCount = info and info.stackCount;
 	if(itemLink) then
 		local itemName, _, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
-			itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(itemLink);
+			itemEquipLoc, itemTexture, itemSellPrice = C_Item.GetItemInfo(itemLink);
 		local itemID = Addon:GetItemID(itemLink);
 		
 		if(not itemName) then return false end
@@ -1478,7 +1483,9 @@ function Addon:ConfirmSellJunk(skip_limit, dont_destroy)
 	local itemsDestroyed = 0;
 	for index, slotInfo in ipairs(items) do
 		if(slotInfo.data.shouldDestroy and not dont_destroy) then
-			local texture, itemCount, locked, quality, readable, lootable, itemLink = GetContainerItemInfo(slotInfo.bag, slotInfo.slot);
+			local info = C_Container.GetContainerItemInfo(slotInfo.bag, slotInfo.slot);
+			local itemLink = info and info.hyperlink;
+			local itemCount = info and info.stackCount or 0;
 			local itemMessage = string.format("Destroying %s", itemLink);
 			if(itemCount > 1) then
 				itemMessage = string.format("%s x%d", itemMessage, itemCount);
@@ -1489,7 +1496,7 @@ function Addon:ConfirmSellJunk(skip_limit, dont_destroy)
 			end
 			
 			ClearCursor();
-			PickupContainerItem(slotInfo.bag, slotInfo.slot);
+			C_Container.PickupContainerItem(slotInfo.bag, slotInfo.slot);
 			DeleteCursorItem();
 			
 			itemsDestroyed = itemsDestroyed + 1;
@@ -1516,26 +1523,28 @@ function Addon:ConfirmSellJunk(skip_limit, dont_destroy)
 	
 	local itemsSold = 0;
 	for index, slotInfo in ipairs(itemsToSell) do
-		local texture, itemCount, locked, quality, readable, lootable, itemLink = GetContainerItemInfo(slotInfo.bag, slotInfo.slot);
-	
+		local info = C_Container.GetContainerItemInfo(slotInfo.bag, slotInfo.slot);
+		local itemLink = info and info.hyperlink;
+		local itemCount = info and info.stackCount or 0;
+
 		local itemMessage = string.format("Selling %s", itemLink);
 		if(itemCount > 1) then
 			itemMessage = string.format("%s x%d", itemMessage, itemCount);
 		end
-		
+
 		if(Addon.db.global.VerboseChat) then
 			Addon:AddMessage(itemMessage);
 		end
-		
-		UseContainerItem(slotInfo.bag, slotInfo.slot);
-		
+
+		C_Container.UseContainerItem(slotInfo.bag, slotInfo.slot);
+
 		if (Addon.MerchantSellError) then
 			Addon:AddMessage("This merchant doesn't buy items.");
 			break;
 		end
-		
+
 		itemsSold = itemsSold + 1;
-		
+
 		if(not skip_limit and index == maxSell and index ~= #items) then
 			Addon:AddMessage("Sold %d items (%d more to sell)", index, #items - index);
 			skipped = true;
@@ -1570,20 +1579,22 @@ function Addon:ConfirmSellUnusables()
 	local itemsDestroyed = 0;
 	for index, slotInfo in ipairs(items) do
 		if(slotInfo.data.shouldDestroy) then
-			local texture, itemCount, locked, quality, readable, lootable, itemLink = GetContainerItemInfo(slotInfo.bag, slotInfo.slot);
+			local info = C_Container.GetContainerItemInfo(slotInfo.bag, slotInfo.slot);
+			local itemLink = info and info.hyperlink;
+			local itemCount = info and info.stackCount or 0;
 			local itemMessage = string.format("Destroying %s", itemLink);
 			if(itemCount > 1) then
 				itemMessage = string.format("%s x%d", itemMessage, itemCount);
 			end
-			
+
 			if(Addon.db.global.VerboseChat) then
 				Addon:AddMessage(itemMessage);
 			end
-			
+
 			ClearCursor();
-			PickupContainerItem(slotInfo.bag, slotInfo.slot);
+			C_Container.PickupContainerItem(slotInfo.bag, slotInfo.slot);
 			DeleteCursorItem();
-			
+
 			itemsDestroyed = itemsDestroyed + 1;
 		else
 			tinsert(itemsToSell, slotInfo);
@@ -1608,7 +1619,9 @@ function Addon:ConfirmSellUnusables()
 	
 	local itemsSold = 0;
 	for index, slotInfo in ipairs(itemsToSell) do
-		local texture, itemCount, locked, quality, readable, lootable, itemLink = GetContainerItemInfo(slotInfo.bag, slotInfo.slot);
+		local info = C_Container.GetContainerItemInfo(slotInfo.bag, slotInfo.slot);
+		local itemLink = info and info.hyperlink;
+		local itemCount = info and info.stackCount or 0;
 		local itemMessage = string.format("Selling %s", itemLink);
 		if(itemCount > 1) then
 			itemMessage = string.format("%s x%d", itemMessage, itemCount);
@@ -1618,7 +1631,7 @@ function Addon:ConfirmSellUnusables()
 			Addon:AddMessage(itemMessage);
 		end
 		
-		UseContainerItem(slotInfo.bag, slotInfo.slot);
+		C_Container.UseContainerItem(slotInfo.bag, slotInfo.slot);
 		
 		if (Addon.MerchantSellError) then
 			Addon:AddMessage("This merchant doesn't buy items.");
@@ -1694,7 +1707,7 @@ function DjinnisVendorerSellJunkButton_OnEnter(self)
 		end
 		GameTooltip:AddLine(" ");
 	end
-	GameTooltip:AddDoubleLine("Estimated Income", string.format("|cffffffff%d items  %s  ", #items, GetCoinTextureString(sellPrice)));
+	GameTooltip:AddDoubleLine("Estimated Income", string.format("|cffffffff%d items  %s  ", #items, C_CurrencyInfo.GetCoinTextureString(sellPrice)));
 	
 	if(#items > 0) then
 		local hasTitle = false;
@@ -1707,7 +1720,7 @@ function DjinnisVendorerSellJunkButton_OnEnter(self)
 				end
 				
 				local itemName, _, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
-					itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(slotInfo.data.itemLink);
+					itemEquipLoc, itemTexture, itemSellPrice = C_Item.GetItemInfo(slotInfo.data.itemLink);
 				
 				GameTooltip:AddDoubleLine(slotInfo.data.itemLink, string.format("%s", slotInfo.data.reasonText or "--"), 1, 1, 1, 1, 1, 1);
 			end
@@ -1789,7 +1802,7 @@ function DjinnisVendorerSellUnusablesButton_OnEnter(self, button)
 		end
 		GameTooltip:AddLine(" ");
 	end
-	GameTooltip:AddDoubleLine("Estimated Income", string.format("|cffffffff%d items  %s  ", #items, GetCoinTextureString(sellPrice)));
+	GameTooltip:AddDoubleLine("Estimated Income", string.format("|cffffffff%d items  %s  ", #items, C_CurrencyInfo.GetCoinTextureString(sellPrice)));
 	
 	if(#items > 0) then
 		GameTooltip:AddLine(" ");
@@ -1800,7 +1813,7 @@ function DjinnisVendorerSellUnusablesButton_OnEnter(self, button)
 		for index, slotInfo in ipairs(items) do
 			if(slotInfo.data.shouldDestroy) then
 				local itemName, _, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
-					itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(slotInfo.data.itemLink);
+					itemEquipLoc, itemTexture, itemSellPrice = C_Item.GetItemInfo(slotInfo.data.itemLink);
 				
 				GameTooltip:AddDoubleLine(slotInfo.data.itemLink, string.format("%s", slotInfo.data.reasonText or "--"), 1, 1, 1, 1, 1, 1);
 			else
@@ -1810,7 +1823,7 @@ function DjinnisVendorerSellUnusablesButton_OnEnter(self, button)
 		
 		for index, slotInfo in ipairs(itemsToSell) do
 			local itemName, _, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
-				itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(slotInfo.data.itemLink);
+				itemEquipLoc, itemTexture, itemSellPrice = C_Item.GetItemInfo(slotInfo.data.itemLink);
 			
 			GameTooltip:AddDoubleLine(slotInfo.data.itemLink, string.format("%s", slotInfo.data.reasonText or "--"), 1, 1, 1, 1, 1, 1);
 			
@@ -1943,7 +1956,7 @@ function Addon:MERCHANT_CLOSED()
 	end
 	
 	local diff = tonumber(GetMoney() - Addon.PlayerMoney);
-	local moneystring = GetCoinTextureString(math.abs(diff));
+	local moneystring = C_CurrencyInfo.GetCoinTextureString(math.abs(diff));
 	
 	if(diff > 0) then
 		Addon:Announce("|cff73ce2fGained|r " .. moneystring);
@@ -1978,7 +1991,12 @@ hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function()
 	Addon:UpdateMerchantInfo();
 	if(Addon.ApplyListViewVisibility) then Addon:ApplyListViewVisibility() end
 end);
-hooksecurefunc("MerchantFrame_UpdateBuybackInfo", function() Addon:UpdateBuybackInfo() end);
+hooksecurefunc("MerchantFrame_UpdateBuybackInfo", function()
+	Addon:UpdateBuybackInfo();
+	-- Tearing down the list view when switching to buyback prevents its frame
+	-- (and our hidden prev/next page buttons) from leaking onto the buyback UI.
+	if(Addon.ApplyListViewVisibility) then Addon:ApplyListViewVisibility() end
+end);
 
 -- Midnight (12.0) keeps pooled MerchantItem frames alive past the per-page
 -- limit. They leak out of the vendor window wherever they were last parked.
@@ -2056,12 +2074,13 @@ function Addon:UpdateMerchantInfo()
 			if(index <= numMerchantItems) then
 				local itemLink = GetMerchantItemLink(index);
 				if(itemLink) then
-					local _, _, _, _, _, _, isUsable = GetMerchantItemInfo(index);
-					local _, _, rarity, _, _, itemType, itemSubType, _, itemEquipLoc = GetItemInfo(itemLink);
+					local info = C_MerchantFrame.GetItemInfo(index);
+					local isUsable = info and info.isUsable;
+					local _, _, rarity, _, _, itemType, itemSubType, _, itemEquipLoc = C_Item.GetItemInfo(itemLink);
 					
 					if(rarityBorder) then
 						if(rarity and rarity >= 1) then
-							local r, g, b = GetItemQualityColor(rarity);
+							local r, g, b = C_Item.GetItemQualityColor(rarity);
 							local a = 0.9;
 							if(rarity == 1) then a = 0.75 end
 							rarityBorder.border:SetVertexColor(r, g, b, a);
@@ -2069,7 +2088,7 @@ function Addon:UpdateMerchantInfo()
 							rarityBorder:Show();
 						elseif(Addon:IsCurrencyItem(itemLink)) then
 							local rarity = select(9, Addon:GetCurrencyInfo(itemLink));
-							local r, g, b = GetItemQualityColor(rarity);
+							local r, g, b = C_Item.GetItemQualityColor(rarity);
 							local a = 0.9;
 							if(rarity == 1) then a = 0.75 end
 							rarityBorder.border:SetVertexColor(r, g, b, a);
@@ -2160,10 +2179,10 @@ function Addon:UpdateMerchantInfo()
 		
 		local buybackitem = GetBuybackItemLink(GetNumBuybackItems());
 		if(buybackitem) then
-			local _, _, rarity, _, reqLevel, itemType, itemSubType, _, itemEquipLoc = GetItemInfo(buybackitem);
+			local _, _, rarity, _, reqLevel, itemType, itemSubType, _, itemEquipLoc = C_Item.GetItemInfo(buybackitem);
 			
 			if(rarity and rarity >= 1) then
-				local r, g, b = GetItemQualityColor(rarity);
+				local r, g, b = C_Item.GetItemQualityColor(rarity);
 				local a = 0.9;
 				if(rarity == 1) then a = 0.75 end
 				buyBackRarityBorder.border:SetVertexColor(r, g, b, a);
@@ -2206,9 +2225,9 @@ function Addon:UpdateBuybackInfo()
 
 			local link = GetBuybackItemInfo(i);
 			if(link and rarityBorder) then
-				local _, _, rarity = GetItemInfo(link);
+				local _, _, rarity = C_Item.GetItemInfo(link);
 				if(rarity and rarity >= 1) then
-					local r, g, b = GetItemQualityColor(rarity);
+					local r, g, b = C_Item.GetItemQualityColor(rarity);
 					local a = 0.9;
 					if(rarity == 1) then a = 0.75 end
 					rarityBorder.border:SetVertexColor(r, g, b, a);

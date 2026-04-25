@@ -204,8 +204,8 @@ local function GetSortComparator()
 	end
 	if(key == "quality") then
 		return function(a, b)
-			local qa = select(3, GetItemInfo(a.link or "")) or 0;
-			local qb = select(3, GetItemInfo(b.link or "")) or 0;
+			local qa = select(3, C_Item.GetItemInfo(a.link or "")) or 0;
+			local qb = select(3, C_Item.GetItemInfo(b.link or "")) or 0;
 			if(qa == qb) then return (a.name or "") < (b.name or "") end
 			return qa > qb;
 		end;
@@ -213,7 +213,7 @@ local function GetSortComparator()
 	return nil;
 end
 
-local function GatherItems()
+local function GatherMerchantItems()
 	local matches, nonMatches = {}, {};
 	local total = rawGetNumItems();
 	local hasFilter = Addon.FilterText and Addon.FilterText ~= "";
@@ -223,6 +223,9 @@ local function GatherItems()
 		if(link) then
 			local name, texture, price, stack, numAvailable, isPurchasable, isUsable,
 			      hasExtendedCost, currencyID, showNonrefundablePrompt = rawGetItemInfo(rawIndex);
+			-- maxStack is the inventory stack ceiling (e.g. 200 for potions),
+			-- distinct from `stack` which is the merchant's per-purchase quantity.
+			local maxStack = select(8, C_Item.GetItemInfo(link)) or 0;
 			local entry = {
 				kind = KIND_ITEM,
 				rawIndex = rawIndex,
@@ -231,10 +234,12 @@ local function GatherItems()
 				texture = texture,
 				price = price,
 				stack = stack,
+				maxStack = maxStack,
 				numAvailable = numAvailable,
 				isPurchasable = isPurchasable,
 				isUsable = isUsable,
 				hasExtendedCost = hasExtendedCost,
+				currencyID = currencyID,
 				showNonrefundablePrompt = showNonrefundablePrompt,
 				matched = (not hasFilter) or Addon:FilterItem(rawIndex),
 			};
@@ -269,6 +274,46 @@ local function GatherItems()
 	return combined;
 end
 
+-- Buyback uses Blizzard's GetBuybackItem* family (slot indices 1..GetNumBuybackItems).
+-- No filter applies; cost is always plain gold (price returned by GetBuybackItemInfo).
+local function GatherBuybackItems()
+	local entries = {};
+	local total = GetNumBuybackItems() or 0;
+	for slotIndex = 1, total do
+		local link = GetBuybackItemLink(slotIndex);
+		if(link) then
+			local name, texture, price, stack, numAvailable, isUsable = GetBuybackItemInfo(slotIndex);
+			local maxStack = select(8, C_Item.GetItemInfo(link)) or 0;
+			tinsert(entries, {
+				kind = KIND_ITEM,
+				rawIndex = slotIndex,
+				link = link,
+				name = name,
+				texture = texture,
+				price = price,
+				stack = stack,
+				maxStack = maxStack,
+				numAvailable = numAvailable,
+				isPurchasable = true,
+				isUsable = isUsable,
+				hasExtendedCost = false,
+				currencyID = nil,
+				showNonrefundablePrompt = false,
+				matched = true,
+				isBuyback = true,
+			});
+		end
+	end
+	return entries;
+end
+
+local function GatherItems()
+	if(MerchantFrame and MerchantFrame.selectedTab == 2) then
+		return GatherBuybackItems();
+	end
+	return GatherMerchantItems();
+end
+
 ------------------------------------------------------------
 -- Row scripts (referenced from XML)
 ------------------------------------------------------------
@@ -281,12 +326,35 @@ function DjinnisVendorerListRow_OnEnter(self)
 	if(not self.data or self.data.kind ~= KIND_ITEM) then return end
 	SetCursor("BUY_CURSOR");
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-	rawSetTooltipMerchantItem(GameTooltip, self.data.rawIndex);
-	-- Show comparison tooltips for equippable items (held by default; ALT
-	-- forces show via the standard Blizzard helper). Wrapped in pcall so
-	-- API drift on this helper can't break the tooltip flow.
-	if(GameTooltip_ShowCompareItem) then
-		pcall(GameTooltip_ShowCompareItem, GameTooltip);
+
+	if(self.data.isBuyback) then
+		GameTooltip:SetBuybackItem(self.data.rawIndex);
+		if(GameTooltip_ShowCompareItem) then
+			pcall(GameTooltip_ShowCompareItem, GameTooltip);
+		end
+		GameTooltip:Show();
+		return;
+	end
+
+	-- Currency-token rows route through SetCurrencyByID so the tooltip shows
+	-- "You have N" feedback, the way the merchant-token buttons do. Plain
+	-- SetMerchantItem on a currency line item omits that line.
+	local link = self.data.link;
+	local currencyID;
+	if(link and Addon:IsCurrencyItem(link)) then
+		currencyID = Addon:GetCurrencyInfo(link);
+	end
+
+	if(currencyID) then
+		GameTooltip:SetCurrencyByID(currencyID);
+	else
+		rawSetTooltipMerchantItem(GameTooltip, self.data.rawIndex);
+		-- Show comparison tooltips for equippable items (held by default; ALT
+		-- forces show via the standard Blizzard helper). Wrapped in pcall so
+		-- API drift on this helper can't break the tooltip flow.
+		if(GameTooltip_ShowCompareItem) then
+			pcall(GameTooltip_ShowCompareItem, GameTooltip);
+		end
 	end
 	GameTooltip:Show();
 end
@@ -303,8 +371,15 @@ function DjinnisVendorerListRow_OnClick(self, button)
 	local rawIndex = self.data.rawIndex;
 	local link = self.data.link;
 
-	if(IsModifiedClick("CHATLINK") and link) then
-		HandleModifiedItemClick(link);
+	-- HandleModifiedItemClick covers all modifier clicks the standard merchant
+	-- button supports: shift = chat-link, ctrl = dressup/preview, alt = compare.
+	-- It returns true when it consumed the click, false otherwise.
+	if(link and HandleModifiedItemClick(link)) then
+		return;
+	end
+
+	if(self.data.isBuyback) then
+		BuybackItem(rawIndex);
 		return;
 	end
 
@@ -322,15 +397,15 @@ end
 
 local function ApplyDecorations(row, data)
 	local link = data.link;
-	local _, _, rarity, _, _, itemType, itemSubType, _, itemEquipLoc = GetItemInfo(link);
+	local _, _, rarity, _, _, itemType, itemSubType, _, itemEquipLoc = C_Item.GetItemInfo(link);
 
 	local r, g, b = 1, 1, 1;
 	if(rarity and rarity >= 1) then
-		r, g, b = GetItemQualityColor(rarity);
+		r, g, b = C_Item.GetItemQualityColor(rarity);
 	elseif(link and Addon:IsCurrencyItem(link)) then
 		local currencyRarity = select(9, Addon:GetCurrencyInfo(link));
 		if(currencyRarity) then
-			r, g, b = GetItemQualityColor(currencyRarity);
+			r, g, b = C_Item.GetItemQualityColor(currencyRarity);
 		end
 	end
 	row.iconButton.border:SetVertexColor(r, g, b, 0.95);
@@ -344,7 +419,7 @@ local function ApplyDecorations(row, data)
 	if(itemSubType and itemSubType ~= "") then
 		tinsert(infoBits, itemSubType);
 	end
-	local _, _, _, itemLevel = GetItemInfo(link);
+	local _, _, _, itemLevel = C_Item.GetItemInfo(link);
 	if(itemLevel and itemLevel > 1) then
 		tinsert(infoBits, "iLvl " .. itemLevel);
 	end
@@ -354,7 +429,8 @@ local function ApplyDecorations(row, data)
 			tinsert(infoBits, bindLabel);
 		end
 	end
-	if(Addon.db.global.ListViewShowRepDiscount and data.price and data.price > 0) then
+	-- Rep discount only applies to merchant purchases, not buyback prices.
+	if(Addon.db.global.ListViewShowRepDiscount and not data.isBuyback and data.price and data.price > 0) then
 		local discount = GetMerchantDiscount();
 		if(discount and discount > 0) then
 			tinsert(infoBits, "|cff73ce2f-" .. discount .. "%|r");
@@ -432,7 +508,8 @@ local function InitializeRow(row, data)
 
 	-- Cost: gold-priced items use the g/s/c columns; extended-cost items
 	-- (currency tokens) use costText, which overlays the same area.
-	PopulateStackText(row, data.stack);
+	-- Stack column shows inventory max stack, not merchant purchase qty.
+	PopulateStackText(row, data.maxStack);
 	if(data.hasExtendedCost) then
 		row.goldText:SetText("");
 		row.silverText:SetText("");
@@ -503,8 +580,10 @@ end
 ------------------------------------------------------------
 
 function Addon:IsListViewActive()
-	return Addon.db and Addon.db.global and Addon.db.global.ListViewEnabled
-		and MerchantFrame and MerchantFrame:IsShown() and MerchantFrame.selectedTab == 1;
+	if not (Addon.db and Addon.db.global and Addon.db.global.ListViewEnabled) then return false end
+	if not (MerchantFrame and MerchantFrame:IsShown()) then return false end
+	local tab = MerchantFrame.selectedTab;
+	return tab == 1 or tab == 2;
 end
 
 local pageButtonsHidden = false;
@@ -536,13 +615,39 @@ local function ShowMerchantGrid()
 	end
 end
 
+-- Buyback chrome reuses the MerchantItem1-12 buttons, plus BuybackBG. Page
+-- buttons + MerchantBuyBackItem are already hidden by Blizzard on buyback so
+-- we don't touch them here.
+local function HideBuybackChrome()
+	HideMerchantGrid();
+	if(BuybackBG) then BuybackBG:Hide() end
+end
+
+local function RestoreBuybackChrome()
+	ShowMerchantGrid();
+	if(BuybackBG) then BuybackBG:Show() end
+end
+
 local gridWasHidden = false;
+local buybackChromeHidden = false;
 
 function Addon:ApplyListViewVisibility()
 	if(Addon:IsListViewActive()) then
-		HideMerchantGrid();
-		HidePageButtons();
-		gridWasHidden = true;
+		if(MerchantFrame.selectedTab == 1) then
+			HideMerchantGrid();
+			HidePageButtons();
+			gridWasHidden = true;
+			-- Buyback chrome doesn't apply on this tab.
+			buybackChromeHidden = false;
+		else
+			-- Buyback tab. Page buttons are already hidden by Blizzard's
+			-- UpdateBuybackInfo, so no need to call HidePageButtons.
+			HideBuybackChrome();
+			buybackChromeHidden = true;
+			pageButtonsHidden = false;
+			gridWasHidden = false;
+		end
+
 		if(DjinnisVendorerListViewFrame and not DjinnisVendorerListViewFrame:IsShown()) then
 			DjinnisVendorerListViewFrame:Show();
 		else
@@ -552,12 +657,29 @@ function Addon:ApplyListViewVisibility()
 		if(DjinnisVendorerListViewFrame and DjinnisVendorerListViewFrame:IsShown()) then
 			DjinnisVendorerListViewFrame:Hide();
 		end
-		RestorePageButtons();
-		if(gridWasHidden) then
-			ShowMerchantGrid();
-			gridWasHidden = false;
-			if(MerchantFrame and MerchantFrame:IsShown() and MerchantFrame.selectedTab == 1) then
+		local tab = MerchantFrame and MerchantFrame.selectedTab;
+		if(tab == 1) then
+			RestorePageButtons();
+			if(gridWasHidden) then
+				ShowMerchantGrid();
+				gridWasHidden = false;
 				MerchantFrame_UpdateMerchantInfo();
+			end
+			-- We can't be carrying buyback state into a merchant-tab restore
+			-- (Blizzard's tab switch already ran UpdateMerchantInfo), so drop
+			-- the flag without doing any DOM work.
+			buybackChromeHidden = false;
+		elseif(tab == 2) then
+			-- Returning to buyback chrome after a list-view-off toggle.
+			-- gridWasHidden / pageButtonsHidden carry over from the merchant
+			-- tab and don't apply here; reset them so a later merchant-tab
+			-- visit takes the proper "hide" path.
+			pageButtonsHidden = false;
+			gridWasHidden = false;
+			if(buybackChromeHidden) then
+				RestoreBuybackChrome();
+				buybackChromeHidden = false;
+				MerchantFrame_UpdateBuybackInfo();
 			end
 		end
 	end

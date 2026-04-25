@@ -15,7 +15,6 @@ Addon.BlizzFunctions = {
 	ShowMerchantSellCursor          = _G.ShowMerchantSellCursor,
 	GetMerchantItemCostInfo         = _G.GetMerchantItemCostInfo,
 	GetMerchantItemCostItem         = _G.GetMerchantItemCostItem,
-	GetMerchantItemInfo             = _G.GetMerchantItemInfo,
 	GetMerchantItemLink             = _G.GetMerchantItemLink,
 	GetMerchantItemMaxStack         = _G.GetMerchantItemMaxStack,
 	GetMerchantNumItems             = _G.GetMerchantNumItems,
@@ -62,7 +61,7 @@ GameTooltip.SetMerchantItem = function(self, index)
 		if(Addon.db.global.UseImprovedStackSplit) then
 			local itemLink = _GetMerchantItemLink(FilteredMerchantItems[index]);
 			if(itemLink) then
-				local name, _, _, _, _, _, _, stack = GetItemInfo(itemLink)
+				local name, _, _, _, _, _, _, stack = C_Item.GetItemInfo(itemLink)
 				if(name and stack <= 1 or Addon:IsCurrencyItem(itemLink)) then
 					GameTooltip:AddLine(ITEM_VENDOR_STACK_BUY, 0, 1, 0);
 				end
@@ -127,16 +126,6 @@ _G.GetMerchantItemCostItem = function(index, itemIndex)
 	if(#FilteredMerchantItems == 0) then return end
 	
 	return _GetMerchantItemCostItem(FilteredMerchantItems[index], itemIndex);
-end
-
-_G.GetMerchantItemInfo = function(index)
-	if(not index) then return end
-
-	if(not FilteredMerchantItems[index]) then Addon:RefreshFilteredItems(); end
-	if(#FilteredMerchantItems == 0) then return end
-	if (not FilteredMerchantItems[index]) then return end
-
-	return _GetMerchantItemInfo(FilteredMerchantItems[index]);
 end
 
 -- Midnight's MerchantFrame_UpdateMerchantInfo / MerchantItemButton_OnClick
@@ -467,8 +456,8 @@ function Addon:FilterItem(index)
 	
 	local itemLinkTypeID, itemID, itemLinkType = Addon:GetItemLinkInfo(itemLink);
 	local itemName, texture, price, quantity, numAvailable, isPurchasable, isUsable, extendedCost = _GetMerchantItemInfo(index);
-	local equippable = IsEquippableItem(itemLink);
-	local _, _, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, _, itemEquipLoc = GetItemInfo(itemLink);
+	local equippable = C_Item.IsEquippableItem(itemLink);
+	local _, _, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, _, itemEquipLoc = C_Item.GetItemInfo(itemLink);
 	local qualityText = string.lower(_G["ITEM_QUALITY" .. (itemRarity or 1) .. "_DESC"]);
 	
 	local equipSlot = nil;
@@ -733,8 +722,16 @@ hooksecurefunc("MerchantFrame_Update", function()
 		end
 		if(Addon.ApplyListViewVisibility) then Addon:ApplyListViewVisibility() end
 	else
-		MerchantFrame_UpdateBuybackInfo();
-		Addon:HideExtensionPanel();
+		-- Buyback tab. With list view on, keep the extension width so the
+		-- buyback list view fills the same pane as the merchant list view.
+		-- Without list view, revert to Blizzard's default buyback grid width.
+		local listOn = Addon.db and Addon.db.global and Addon.db.global.ListViewEnabled;
+		if(listOn) then
+			Addon:UpdateExtensionPanel();
+		else
+			MerchantFrame_UpdateBuybackInfo();
+			Addon:HideExtensionPanel();
+		end
 		if filterDropdown then
 			filterDropdown:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", 0, -28);
 		end
@@ -830,7 +827,9 @@ function DjinnisVendorerFilteringButton_OnClick(self, button)
 end
 
 function Addon:OpenQuickFiltersMenu(anchor)
-	EasyMenu(Addon:GetQuickFiltersMenuData(), anchor or UIParent, "cursor", 0, 0, "MENU", 2.5);
+	MenuUtil.CreateContextMenu(anchor or UIParent, function(owner, rootDescription)
+		Addon:AddMenuEntries(rootDescription, Addon:GetQuickFiltersMenuData());
+	end);
 end
 
 function Addon:WrapMultipleWords(words)
@@ -842,7 +841,7 @@ function Addon:WrapMultipleWords(words)
 end
 
 function Addon:GetQualityString(quality)
-	local color = select(4, GetItemQualityColor(quality));
+	local color = select(4, C_Item.GetItemQualityColor(quality));
 	return string.format("|c%s%s|r", color, _G["ITEM_QUALITY" .. (quality or 1) .. "_DESC"]);
 end
 
@@ -865,7 +864,6 @@ function Addon:GetQuickFiltersMenuData()
 					notCheckable = true,
 					func = function(self)
 						Addon:SetFilter(string.lower(self.value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -873,7 +871,6 @@ function Addon:GetQuickFiltersMenuData()
 					notCheckable = true,
 					func = function(self)
 						Addon:SetFilter(string.lower(self.value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -881,7 +878,6 @@ function Addon:GetQuickFiltersMenuData()
 					notCheckable = true,
 					func = function(self)
 						Addon:SetFilter(string.lower(self.value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -889,7 +885,6 @@ function Addon:GetQuickFiltersMenuData()
 					notCheckable = true,
 					func = function(self)
 						Addon:SetFilter(string.lower(self.value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -897,7 +892,6 @@ function Addon:GetQuickFiltersMenuData()
 					notCheckable = true,
 					func = function(self)
 						Addon:SetFilter(string.lower(self.value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -905,7 +899,6 @@ function Addon:GetQuickFiltersMenuData()
 					notCheckable = true,
 					func = function(self)
 						Addon:SetFilter(string.lower(self.value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -913,7 +906,6 @@ function Addon:GetQuickFiltersMenuData()
 					notCheckable = true,
 					func = function(self)
 						Addon:SetFilter(string.lower(self.value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -921,7 +913,6 @@ function Addon:GetQuickFiltersMenuData()
 					notCheckable = true,
 					func = function(self)
 						Addon:SetFilter(string.lower(self.value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -929,7 +920,6 @@ function Addon:GetQuickFiltersMenuData()
 					notCheckable = true,
 					func = function(self)
 						Addon:SetFilter("canafford");
-						CloseMenus();
 					end,
 				},
 				{
@@ -940,7 +930,6 @@ function Addon:GetQuickFiltersMenuData()
 					notCheckable = true,
 					func = function(self)
 						Addon:SetFilter(string.lower(self.value));
-						CloseMenus();
 					end,
 					tooltipTitle = not CanIMogIt and "Requires dependency |cfffffd00Can I Mog It|r",
 					tooltipOnButton = 1,
@@ -952,7 +941,6 @@ function Addon:GetQuickFiltersMenuData()
 					notCheckable = true,
 					func = function(self)
 						Addon:SetFilter("unknowntransmog");
-						CloseMenus();
 					end,
 					tooltipTitle = not CanIMogIt and "Requires dependency |cfffffd00Can I Mog It|r",
 					tooltipOnButton = 1,
@@ -975,7 +963,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY6_DESC"]);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -984,7 +971,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY5_DESC"]);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -993,7 +979,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY4_DESC"]);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1002,7 +987,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY3_DESC"]);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1011,7 +995,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY2_DESC"]);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1020,7 +1003,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY1_DESC"]);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1029,7 +1011,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY7_DESC"]);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 			},
@@ -1048,7 +1029,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY6_DESC"]);
 						Addon:SetFilter(string.format(">=%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1057,7 +1037,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY5_DESC"]);
 						Addon:SetFilter(string.format(">=%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1066,7 +1045,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY4_DESC"]);
 						Addon:SetFilter(string.format(">=%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1075,7 +1053,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY3_DESC"]);
 						Addon:SetFilter(string.format(">=%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1084,7 +1061,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY2_DESC"]);
 						Addon:SetFilter(string.format(">=%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1093,7 +1069,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(_G["ITEM_QUALITY1_DESC"]);
 						Addon:SetFilter(string.format(">=%s", value));
-						CloseMenus();
 					end,
 				},
 			},
@@ -1112,7 +1087,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1121,7 +1095,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1130,7 +1103,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1139,7 +1111,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1148,7 +1119,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1157,7 +1127,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1172,7 +1141,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1181,7 +1149,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1190,7 +1157,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1199,7 +1165,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1208,7 +1173,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1217,7 +1181,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1226,7 +1189,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1235,7 +1197,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1244,7 +1205,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1259,7 +1219,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1268,7 +1227,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1277,7 +1235,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1292,7 +1249,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 				{
@@ -1301,7 +1257,6 @@ function Addon:GetQuickFiltersMenuData()
 					func = function(self)
 						local value = Addon:WrapMultipleWords(self.value);
 						Addon:SetFilter(string.format("+%s", value));
-						CloseMenus();
 					end,
 				},
 			},

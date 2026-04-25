@@ -17,7 +17,13 @@ local MAX_STACK_SIZE = 1000000;
 
 local function api_GetMerchantItemInfo(rawMode, index)
 	if(rawMode) then return Addon:GetUnfilteredMerchantItemInfo(index) end
-	return GetMerchantItemInfo(index);
+	-- Filter wrapper in vendorfilter.lua overrides C_MerchantFrame.GetItemInfo
+	-- to redirect display indices through the active filter.
+	local info = C_MerchantFrame.GetItemInfo(index);
+	if not info then return end
+	return info.name, info.texture, info.price, info.stackCount,
+		info.numAvailable, info.isPurchasable, info.isUsable,
+		info.hasExtendedCost, info.currencyID;
 end
 
 local function api_GetMerchantItemLink(rawMode, index)
@@ -214,7 +220,7 @@ function DjinnisVendorerStackSplitMixin:GetTotalPriceString(index, quantity)
 	local _, _, price, stackCount, _, _, _, extendedCost = api_GetMerchantItemInfo(rawMode, index);
 	if(price and price > 0) then
 		local totalPrice = math.ceil((price / stackCount) * quantity);
-		text = ("%s %s "):format(text, GetCoinTextureString(totalPrice, 12));
+		text = ("%s %s "):format(text, C_CurrencyInfo.GetCoinTextureString(totalPrice, 12));
 	end
 
 	if(extendedCost) then
@@ -281,17 +287,17 @@ function DjinnisVendorerStackSplitMixin:ConfirmExtendedItemCost(itemButton, numT
 	local r, g, b = 1, 1, 1;
 	local specs = {};
 	if(itemButton.link) then
-		itemName, _, itemQuality = GetItemInfo(itemButton.link);
+		itemName, _, itemQuality = C_Item.GetItemInfo(itemButton.link);
 	end
 
 	if ( itemName ) then
 		--It's an item
-		r, g, b = GetItemQualityColor(itemQuality); 
-		specs = GetItemSpecInfo(itemButton.link, specs);
+		r, g, b = C_Item.GetItemQualityColor(itemQuality); 
+		specs = C_Item.GetItemSpecInfo(itemButton.link, specs);
 	else
 		--Not an item. Could be currency or something. Just use what's on the button.
 		itemName = itemButton.name;
-		r, g, b = GetItemQualityColor(1); 
+		r, g, b = C_Item.GetItemQualityColor(1); 
 	end
 	
 	local specText;
@@ -326,9 +332,9 @@ function DjinnisVendorerStackSplitMixin:ConfirmHighCostItem(itemButton, quantity
 	
 	quantity = (quantity or 1);
 	local index = itemButton:GetID();
-	local itemName, _, quality = GetItemInfo(itemButton.link);
+	local itemName, _, quality = C_Item.GetItemInfo(itemButton.link);
 	
-	local r, g, b = GetItemQualityColor(quality);
+	local r, g, b = C_Item.GetItemQualityColor(quality);
 	
 	self.purchaseInfo = {
 		remaining = quantity,
@@ -528,15 +534,16 @@ end
 function Addon:GetProperItemCount(item)
 	if(not item) then return 0 end
 	
-	local _, itemLink = GetItemInfo(item);
-	local itemCount = GetItemCount(itemLink);
+	local _, itemLink = C_Item.GetItemInfo(item);
+	local itemCount = C_Item.GetItemCount(itemLink);
 	
 	if REAGENTBANK_CONTAINER then
-		local numSlots = GetContainerNumSlots(REAGENTBANK_CONTAINER) or 0;
+		local numSlots = C_Container.GetContainerNumSlots(REAGENTBANK_CONTAINER) or 0;
 		for slotIndex = 1, numSlots do
-			local _, containerItemCount, _, _, _, _, containerItemLink = GetContainerItemInfo(REAGENTBANK_CONTAINER, slotIndex);
+			local info = C_Container.GetContainerItemInfo(REAGENTBANK_CONTAINER, slotIndex);
+			local containerItemLink = info and info.hyperlink;
 			if(itemLink and containerItemLink == itemLink) then
-				itemCount = itemCount + containerItemCount;
+				itemCount = itemCount + info.stackCount;
 			end
 		end
 	end
@@ -622,9 +629,6 @@ function MerchantItemButton_OnModifiedClick(self, button)
 				return;
 			end
 			if(IsModifiedClick("SPLITSTACK")) then
-				local maxStack = GetMerchantItemMaxStack(merchantItemIndex);
-				local _, _, price, stackCount, _, _, _, extendedCost = GetMerchantItemInfo(merchantItemIndex);
-				
 				DjinnisVendorerStackSplitFrame:Open(merchantItemIndex, self);
 				return;
 			end
@@ -682,7 +686,7 @@ end
 function Addon:GetBagSpaceForItem(item, stackSize)
 	if(not item) then return 0, 0 end
 
-	local _, itemLink = GetItemInfo(item);
+	local _, itemLink = C_Item.GetItemInfo(item);
 	if(not itemLink) then return 0, 0 end
 
 	stackSize = stackSize or 1;
@@ -690,14 +694,13 @@ function Addon:GetBagSpaceForItem(item, stackSize)
 
 	local itemID = tonumber(itemLink:match("item:(%d+)"));
 
-	local getFamily = GetItemFamily or (C_Item and C_Item.GetItemFamily);
-	local itemFamily = (getFamily and getFamily(itemLink)) or 0;
+	local itemFamily = C_Item.GetItemFamily(itemLink) or 0;
 
 	local totalFit = 0;
 	local emptySlots = 0;
 	local lastBag = (NUM_BAG_SLOTS or 4);
 	for bagID = 0, lastBag do
-		local bagFree, bagFamily = GetContainerNumFreeSlots(bagID);
+		local bagFree, bagFamily = C_Container.GetContainerNumFreeSlots(bagID);
 		bagFree = bagFree or 0;
 		bagFamily = bagFamily or 0;
 
@@ -709,9 +712,11 @@ function Addon:GetBagSpaceForItem(item, stackSize)
 
 			-- Top-off room: count unused capacity in partial stacks of the same item.
 			if(itemID and stackSize > 1) then
-				local numSlots = GetContainerNumSlots(bagID) or 0;
+				local numSlots = C_Container.GetContainerNumSlots(bagID) or 0;
 				for slotIndex = 1, numSlots do
-					local _, stackCount, _, _, _, _, _, _, _, slotItemID = GetContainerItemInfo(bagID, slotIndex);
+					local info = C_Container.GetContainerItemInfo(bagID, slotIndex);
+					local stackCount = info and info.stackCount;
+					local slotItemID = info and info.itemID;
 					if(slotItemID == itemID and stackCount and stackCount < stackSize) then
 						totalFit = totalFit + (stackSize - stackCount);
 					end

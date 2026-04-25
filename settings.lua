@@ -17,7 +17,7 @@ function Addon:HandleConsole(params, action, ...)
 	if(action == "ignore") then
 		local _, item = strsplit(" ", strtrim(params), 2);
 		if(item) then
-			local _, itemLink = GetItemInfo(item);
+			local _, itemLink = C_Item.GetItemInfo(item);
 			if(itemLink) then
 				Addon:AddItemToIgnoreList(itemLink);
 			else
@@ -29,7 +29,7 @@ function Addon:HandleConsole(params, action, ...)
 	elseif(action == "junk") then
 		local _, item = strsplit(" ", strtrim(params), 2);
 		if(item) then
-			local _, itemLink = GetItemInfo(item);
+			local _, itemLink = C_Item.GetItemInfo(item);
 			if(itemLink) then
 				Addon:AddItemToJunkList(itemLink);
 			else
@@ -81,24 +81,9 @@ function Addon:GetToggleStatusText(status)
 end
 
 function Addon:OpenSettingsMenu(anchor)
-	if MenuUtil and MenuUtil.CreateContextMenu then
-		MenuUtil.CreateContextMenu(anchor, function(owner, rootDescription)
-			Addon:PopulateSettingsMenu(rootDescription);
-		end);
-		return;
-	end
-
-	-- Legacy fallback (pre-11.0)
-	if(not Addon._legacyDropDownFrame) then
-		Addon._legacyDropDownFrame = CreateFrame("Frame", "DjinnisVendorerSettingsContextMenuFrame", anchor, "UIDropDownMenuTemplate");
-	end
-	Addon._legacyDropDownFrame:SetPoint("BOTTOM", anchor, "CENTER", 0, 5);
-	EasyMenu(Addon:GetMenuData(), Addon._legacyDropDownFrame, "cursor", 0, 0, "MENU", 2.5);
-	if DropDownList1 then
-		DropDownList1:ClearAllPoints();
-		DropDownList1:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", -1, -2);
-		DropDownList1:SetClampedToScreen(true);
-	end
+	MenuUtil.CreateContextMenu(anchor, function(owner, rootDescription)
+		Addon:PopulateSettingsMenu(rootDescription);
+	end);
 end
 
 function Addon:PopulateSettingsMenu(rootDescription)
@@ -129,6 +114,10 @@ function Addon:AddMenuEntry(parentDescription, entry)
 		return;
 	end
 
+	-- Legacy UIDropDownMenu passed `self` into entry.func; some callbacks
+	-- (notably the vendor quick-filter menu) read `self.value`. Mimic it.
+	local fakeSelf = { value = entry.value or entry.text };
+
 	if entry.isRadio then
 		local checkedFn = entry.checked;
 		if type(checkedFn) ~= "function" then
@@ -139,7 +128,7 @@ function Addon:AddMenuEntry(parentDescription, entry)
 			entry.text or "",
 			checkedFn,
 			function()
-				if entry.func then entry.func() end
+				if entry.func then entry.func(fakeSelf) end
 				return MenuResponse.Refresh;
 			end
 		);
@@ -148,7 +137,7 @@ function Addon:AddMenuEntry(parentDescription, entry)
 
 	if entry.notCheckable then
 		if entry.func then
-			parentDescription:CreateButton(entry.text or "", entry.func);
+			parentDescription:CreateButton(entry.text or "", function() entry.func(fakeSelf) end);
 		else
 			parentDescription:CreateTitle(entry.text or "");
 		end
@@ -164,7 +153,7 @@ function Addon:AddMenuEntry(parentDescription, entry)
 		entry.text or "",
 		checkedFn,
 		function()
-			if entry.func then entry.func() end
+			if entry.func then entry.func(fakeSelf) end
 			return MenuResponse.Refresh;
 		end
 	);
@@ -305,7 +294,9 @@ function Addon:GetMenuData()
 			func = function()
 				self.db.global.ListViewEnabled = not self.db.global.ListViewEnabled;
 				self:UpdateExtensionPanel();
-				if(MerchantFrame and MerchantFrame:IsShown() and MerchantFrame.selectedTab == 1) then
+				-- Refresh whichever tab is active so the list view shows or
+				-- hides itself + restores merchant/buyback chrome immediately.
+				if(MerchantFrame and MerchantFrame:IsShown()) then
 					MerchantFrame_Update();
 				end
 			end,
@@ -587,7 +578,7 @@ function Addon:GetMenuData()
 		},
 		{
 			text = "Close",
-			func = function() CloseMenus(); end,
+			func = function() end,
 			notCheckable = true,
 		},
 	};
@@ -596,13 +587,5 @@ function Addon:GetMenuData()
 end
 
 function DjinnisVendorerSettingsButton_OnClick(self)
-	if MenuUtil and MenuUtil.CreateContextMenu then
-		Addon:OpenSettingsMenu(self);
-		return;
-	end
-	if(DropDownList1 and DropDownList1:IsVisible() and select(2, DropDownList1:GetPoint()) == self) then
-		CloseMenus();
-	else
-		Addon:OpenSettingsMenu(self);
-	end
+	Addon:OpenSettingsMenu(self);
 end

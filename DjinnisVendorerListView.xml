@@ -2,7 +2,7 @@
 ..\FrameXML\UI.xsd">
 
 	<Button name="DjinnisVendorerListRowTemplate" virtual="true" registerForClicks="LeftButtonUp,RightButtonUp">
-		<Size x="280" y="40"/>
+		<Size y="40"/>
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture parentKey="bg" setAllPoints="true">

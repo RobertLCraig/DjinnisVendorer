@@ -29,10 +29,10 @@ function DjinnisVendorerItemListsFrameItems_Update()
 		local itemID = DjinnisVendorerItemListsFrame.itemList[index];
 		
 		if(itemID) then
-			local name, link, rarity, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemID);
+			local name, link, rarity, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = C_Item.GetItemInfo(itemID);
 			
 			if(name) then
-				local r, g, b = GetItemQualityColor(rarity);
+				local r, g, b = C_Item.GetItemQualityColor(rarity);
 				local hexcolor = string.format("%02x%02x%02x", r * 255, g * 255, b * 255);
 				
 				button.name:SetText(("|cff%s%s|r"):format(hexcolor, name));
@@ -123,7 +123,7 @@ function DjinnisVendorerItemListsFrame_ReindexItems()
 	
 	local indexedItems = {};
 	for itemID, status in pairs(DjinnisVendorerItemListsFrame.itemListOriginal) do
-		local name = GetItemInfo(itemID);
+		local name = C_Item.GetItemInfo(itemID);
 		if(name) then -- only add found items
 			if((type(status) == "number" and status > 0) or (type(status) == "boolean" and status == true)) then
 				tinsert(indexedItems, itemID)
@@ -165,7 +165,7 @@ function DjinnisVendorerItemListItemButtonRemove_OnClick(itembutton)
 		DjinnisVendorerItemListsFrame.itemListOriginal[itemID] = nil;
 	end
 	
-	local _, itemLink = GetItemInfo(itemID);
+	local _, itemLink = C_Item.GetItemInfo(itemID);
 	Addon:AddMessage(string.format("%s removed from the list.", itemLink));
 	
 	Addon:UpdateDjinnisVendorerItemLists()

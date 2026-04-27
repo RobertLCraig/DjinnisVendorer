@@ -586,6 +586,63 @@
 		</Scripts>
 	</Frame>
 	
+	<Button name="DjinnisVendorerResizeHandleTemplate" virtual="true">
+		<Size x="18" y="18"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="bg" file="Interface\BUTTONS\WHITE8X8" setAllPoints="true">
+					<Color r="0" g="0" b="0" a="0.6"/>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture parentKey="grippy" file="Interface\BUTTONS\WHITE8X8">
+					<Size x="2" y="14"/>
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" x="-3" y="2"/>
+					</Anchors>
+					<Color r="1" g="0.82" b="0" a="0.95"/>
+				</Texture>
+				<Texture parentKey="grippy2" file="Interface\BUTTONS\WHITE8X8">
+					<Size x="14" y="2"/>
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" x="-2" y="3"/>
+					</Anchors>
+					<Color r="1" g="0.82" b="0" a="0.95"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<HighlightTexture file="Interface\BUTTONS\WHITE8X8" alphaMode="ADD" setAllPoints="true">
+			<Color r="1" g="0.82" b="0" a="0.45"/>
+		</HighlightTexture>
+		<Scripts>
+			<OnLoad function="DjinnisVendorerResizeHandle_OnLoad"/>
+			<OnEnter function="DjinnisVendorerResizeHandle_OnEnter"/>
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+			<OnMouseDown function="DjinnisVendorerResizeHandle_OnMouseDown"/>
+			<OnMouseUp function="DjinnisVendorerResizeHandle_OnMouseUp"/>
+		</Scripts>
+	</Button>
+
+	<Button name="DjinnisVendorerResizeHandleBottomRight" parent="MerchantFrame" inherits="DjinnisVendorerResizeHandleTemplate">
+		<KeyValues>
+			<KeyValue key="resizeCorner" value="BOTTOMRIGHT" type="string"/>
+		</KeyValues>
+		<Anchors>
+			<Anchor point="BOTTOMRIGHT" relativeTo="MerchantFrame" relativePoint="BOTTOMRIGHT" x="-4" y="4"/>
+		</Anchors>
+	</Button>
+
+	<Button name="DjinnisVendorerResizeHandleBottomLeft" parent="MerchantFrame" inherits="DjinnisVendorerResizeHandleTemplate">
+		<KeyValues>
+			<KeyValue key="resizeCorner" value="BOTTOMLEFT" type="string"/>
+		</KeyValues>
+		<Anchors>
+			<Anchor point="BOTTOMLEFT" relativeTo="MerchantFrame" relativePoint="BOTTOMLEFT" x="4" y="4"/>
+		</Anchors>
+	</Button>
+
 	<Button name="DjinnisVendorerSmartRepairButton" parent="MerchantGuildBankRepairButton" hidden="true">
 		<Size x="28" y="28"/>
 		<Anchors>

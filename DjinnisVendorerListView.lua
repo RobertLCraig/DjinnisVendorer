@@ -403,7 +403,8 @@ local function ApplyDecorations(row, data)
 	if(rarity and rarity >= 1) then
 		r, g, b = C_Item.GetItemQualityColor(rarity);
 	elseif(link and Addon:IsCurrencyItem(link)) then
-		local currencyRarity = select(9, Addon:GetCurrencyInfo(link));
+		local _, info = Addon:GetCurrencyInfo(link);
+		local currencyRarity = info and info.quality;
 		if(currencyRarity) then
 			r, g, b = C_Item.GetItemQualityColor(currencyRarity);
 		end
@@ -627,6 +628,11 @@ local function RestoreBuybackChrome()
 	ShowMerchantGrid();
 	if(BuybackBG) then BuybackBG:Show() end
 end
+
+-- The MerchantBuyBackItem ("last item sold" preview slot) and its decoration
+-- frames stay visible while list view is active; Addon:LayoutBottomLeftChrome
+-- in core.lua relocates them into the right-hand decorative inset so they
+-- don't collide with the repair-button row that's parked in the left inset.
 
 local gridWasHidden = false;
 local buybackChromeHidden = false;

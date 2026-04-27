@@ -1,48 +1,72 @@
 # DjinnisVendorer
-DjinnisVendorer the NPC merchant improvement addon for World of Warcraft.
+
+DjinnisVendorer is an NPC merchant improvement addon for World of Warcraft. It builds on the original Vendorer by Sonaza and is maintained against current retail (WoW Midnight, Interface 120005).
 
 ## Description
-Sometimes vendors sell so many items it's impossible to find the items you require. Introducing DjinnisVendorer which expands the merchant frame to display up to 20 items at once and offers several different types of filters to help you quickly browse for what you need.
 
-* **Basic Filtering** You can search by item name, rarity, type, slot or required currency.
-* **Tooltip text** Optionally you can enable search from tooltip text. It is very resource intensive and can be disabled if it causes problems.
-* **By Item ID** Prefix a number with letters id. For example id6948.
-* **By Required Level** Prefix a number with the letter r. For example r92.
-* **By Item Level** Prefix a number with the letter i. For example i200.
-* **By Price** Enter a price value formatted like 12g34s56c.
-* **Searching for Ranges of Values** Search values can be prefixed with <, <=, > and >= to search for ranges of values. For example >=r90 will find all items that require level higher than or equal to 90. Another example >=250g <=500g will find all items that cost between 250 and 500 gold.
-* **Magic words (predefined filters)** usable, unusable, equippable, purchasable, unequippable, known, unknown, available, canafford, transmogable, unknowntransmog.
+Sometimes vendors sell so many items it's impossible to find the one you actually want. DjinnisVendorer widens the merchant frame so more items fit on screen at once, adds a vertical list view for browsing merchants with long inventories, and gives you a flexible search box for narrowing things down.
 
-You can also search for phrases by putting the words in quotes. The results will only include items with the words in the same order as the ones inside the quotes.
+### Filtering
 
-Prefixing a query with + (a plus) will attempt exact matching and all other results are discarded. Useful for finding specific types of items.
+* **Basic filtering** Search by item name, rarity, type, slot or required currency.
+* **Tooltip text** Optionally search the full tooltip text. This is resource intensive and can be disabled if it causes frame drops.
+* **By item ID** Prefix a number with `id`. For example `id6948`.
+* **By required level** Prefix a number with `r`. For example `r92`.
+* **By item level** Prefix a number with `i`. For example `i200`.
+* **By price** Enter a price value formatted like `12g34s56c`.
+* **Ranges of values** Prefix any of the above with `<`, `<=`, `>` or `>=`. For example `>=r90` finds items that require level 90 or higher; `>=250g <=500g` finds items costing between 250 and 500 gold.
+* **Magic words (predefined filters)** `usable`, `unusable`, `equippable`, `purchasable`, `unequippable`, `known`, `unknown`, `available`, `canafford`, `transmogable`, `unknowntransmog`.
 
-Any and all filters can also be negated by prefixing the query word or phrase with either **!** (an exlamation mark) or **-** (a dash).
+You can also search for phrases by putting words in quotes. Results then only include items containing those words in that order.
 
-## Other features
+Prefixing a query with `+` attempts exact matching and discards everything else. Useful for finding specific item types.
 
-DjinnisVendorer improves ability to bulk purchase. You can buy several stacks at a time and the window will also display total cost of your purchase. If the default setting causes problems, you can throttle purchases to slower rate in the settings.
+Any filter can be negated by prefixing it with `!` (an exclamation mark) or `-` (a dash).
 
-The addon also includes buttons to sell junk and unusable soulbound items. Selling junk items can optionally be done automatically always when visiting vendors. Via settings you can also enable the buttons to destroy unsellable junk or unusable items. **If toggled on be careful of what you are destroying**. You can always ignore the item as well. No items are automatically destroyed when auto junk sell is enabled.
+Search text can optionally persist across sessions or just for the current session. Configure this under Settings.
 
-Automatic smart repair feature will make it easy to repair your gear when visiting a vendor that can do repairs. Smart repair will try to spend the maximal guild repair allowance if possible. However, the automatic spending of guild funds can be optionally disabled.
+### Vertical list view
 
-## Optional feature
+As an alternative to the merchant grid, DjinnisVendorer offers a scrollable vertical list view that shows every item the merchant sells in one column, with item name, cost columns, and an inventory max-stack hint. The list view also replaces the buyback tab when enabled, so the same browsing experience applies to both. Toggle it from the Settings menu.
 
-DjinnisVendorer supports displaying whether an item skin has been added to the wardrobe. For this the addon requires an optional dependency addon [Can I Mog It](http://mods.curse.com/addons/wow/can-i-mog-it). The marker can be disabled in the settings.
+Modifier clicks behave the same as on the standard merchant grid: shift-click to chat-link, ctrl-click to preview, alt-click to compare.
 
-### Note
+### Bulk purchase
 
-This addon can and **is likely to conflict** with other addons that do modifications to merchant frames. Due to this reason, the addon must load first before all the other such addons so that it can do the modifications before the other addons. This will still not guarantee compatibility with other addons.
+DjinnisVendorer improves the bulk purchase dialog. You can buy multiple stacks in one click and the dialog shows the total cost of the purchase. If you run into purchase rate limits you can throttle the rate from Settings.
 
-Still if you do not use any other such addons or the modifications by other addons are minor the risk of conflict is non-existent or small.
+### Sell and repair
+
+Buttons to sell junk and unusable soulbound items appear next to the merchant. Junk selling can run automatically whenever you visit a vendor. Settings also enables (with care) destroying unsellable junk or unusable items. **If toggled on, be careful of what you're destroying.** You can ignore individual items so they are never sold or destroyed. No items are auto-destroyed by the auto-junk-sell flow.
+
+The smart repair feature spends your maximum guild-repair allowance first when visiting a repair vendor. The guild-repair behaviour can be disabled if you'd rather pay from your own purse.
+
+If a merchant doesn't actually buy items the addon notices and adds them to an auto-sell ignore list. You can clear that ignore by holding ctrl when clicking the Sell Junk button.
+
+## Slash commands
+
+* `/djinnisvendorer` (or `/djv`) prints usage.
+* `/djv ignore [item]` opens the ignore list, or adds/removes a specific item.
+* `/djv junk [item]` opens the junk-sell list, or adds/removes a specific item.
+* `/djv autosell` toggles automatic junk selling.
+* `/djv autorepair` toggles automatic repair.
+* `/djv smartrepair` toggles smart repair.
+* `/djv eqolwarn` re-enables the EnhanceQoL Merchant conflict warning if it was previously suppressed.
+
+## Optional dependency
+
+DjinnisVendorer can mark items whose appearance you haven't yet collected. This requires the optional dependency [Can I Mog It](https://www.curseforge.com/wow/addons/can-i-mog-it). The marker can be disabled in Settings.
+
+## Conflicts
+
+This addon modifies the merchant frame and **is likely to conflict** with other addons that do the same. The known overlap is EnhanceQoL's Merchant submodule, which DjinnisVendorer detects and offers to disable on first contact.
+
+If you don't use other merchant-frame addons, or theirs only do minor changes, the risk of conflict is small.
 
 ## Dependencies
-DjinnisVendorer uses Ace3 which is included in the /libs directory.
 
-### Note for Releases
-
-To guarantee addon loads first the addon folder should be **!DjinnisVendorer** (as in prefixed with exclamation mark) since the game loads addons with exclamation marks before ones without.
+DjinnisVendorer uses Ace3, included in the `/libs` directory.
 
 ## License
-DjinnisVendorer is licensed under MIT license. See license terms in file LICENSE.
+
+DjinnisVendorer is licensed under the MIT license. See `LICENSE` for the full terms.

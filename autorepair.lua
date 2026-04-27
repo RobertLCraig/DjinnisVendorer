@@ -194,17 +194,11 @@ hooksecurefunc("MerchantFrame_UpdateRepairButtons", function() Addon:UpdateRepai
 
 function Addon:UpdateRepairButtons()
 	if(CanMerchantRepair() and CanGuildBankRepair()) then
-		MerchantRepairAllButton:SetPoint("BOTTOMRIGHT", MerchantFrame, "BOTTOMLEFT", 83, 29)
-
-		-- Midnight (12.0) added MerchantSellAllJunkButton to the right of the
-		-- repair trio. Re-anchor to whichever rightmost button actually exists
-		-- so we never sit on top of a Blizzard button.
-		local anchorTo = MerchantSellAllJunkButton or MerchantGuildBankRepairButton
-		DjinnisVendorerSmartRepairButton:ClearAllPoints()
-		DjinnisVendorerSmartRepairButton:SetPoint("LEFT", anchorTo, "RIGHT", 5, 0)
-
+		-- Position is owned by Addon:NormalizeRepairButtonRow, which chains
+		-- every visible button in the bottom-left row onto a shared baseline.
+		-- We just toggle visibility + enabled state here.
 		DjinnisVendorerSmartRepairButton:Show();
-		
+
 		local repairAllCost, canRepair = GetRepairAllCost();
 		if(not canRepair) then
 			SetDesaturation(DjinnisVendorerSmartRepairButtonIcon, true);
@@ -216,6 +210,11 @@ function Addon:UpdateRepairButtons()
 	else
 		DjinnisVendorerSmartRepairButton:Hide();
 	end
+
+	-- Position is owned by Addon:LayoutBottomLeftChrome (core.lua); call it
+	-- here so smart-repair show/hide takes effect immediately, instead of
+	-- waiting for the next ReanchorBottomChrome pass.
+	if(Addon.LayoutBottomLeftChrome) then Addon:LayoutBottomLeftChrome() end
 end
 
 function DjinnisVendorerSmartRepairButton_OnEnter(self)

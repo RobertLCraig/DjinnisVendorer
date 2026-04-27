@@ -324,6 +324,14 @@ function Addon:OnInitialize()
 		},
 		global = {
 			MerchantFrameExtension = DJINNISVENDORER_EXTENSION_NARROW,
+
+			-- User-chosen MerchantFrame size from the bottom-corner resize handles.
+			-- nil = follow the extension mode default. Both values act as a floor:
+			-- they're only applied when greater than the current mode's minimum,
+			-- so toggling Wide/Narrow still expands as expected.
+			UserMerchantWidth = nil,
+			UserMerchantHeight = nil,
+
 			AutoSellJunk = false,
 			PaintArmorTypes = true,
 			
@@ -418,7 +426,12 @@ function Addon:OnEnable()
 	self:RegisterEvent("TRANSMOG_COLLECTION_UPDATED");
 	
 	Addon.PlayerMoney = GetMoney();
-	
+
+	-- Snapshot Blizzard's original bottom-chrome positions before RestoreSavedSettings
+	-- triggers ApplyMerchantSize, which may resize MerchantFrame past its default
+	-- height/width and confuse later attempts to read those original offsets.
+	Addon:CaptureBottomChromeOffsets();
+
 	Addon:RestoreSavedSettings();
 
 	hooksecurefunc(C_Container, "PickupContainerItem", function()
@@ -438,6 +451,19 @@ function Addon:OnEnable()
 	-- original OnShow so we can re-apply the Default-to-All preference.
 	if MerchantFrame and MerchantFrame.HookScript then
 		MerchantFrame:HookScript("OnShow", function()
+			-- First-show capture: the frame is now laid out at Blizzard's
+			-- original size, so chrome offsets read correctly. If a saved
+			-- size was deferred earlier, apply it now.
+			if(not Addon._bottomChromeOffsets) then
+				Addon:CaptureBottomChromeOffsets();
+			end
+			if(Addon._sizeApplyPending) then
+				Addon._sizeApplyPending = false;
+				Addon:ApplyMerchantSize();
+			elseif(Addon._bottomChromeOffsets) then
+				Addon:ReanchorBottomChrome();
+			end
+
 			if not Addon.db.global.DefaultFilterAll then return end
 			if not (SetMerchantFilter and LE_LOOT_FILTER_ALL) then return end
 			SetMerchantFilter(LE_LOOT_FILTER_ALL);
@@ -512,6 +538,285 @@ function Addon:MakeFrameMovable()
 	MerchantFrame:SetScript("OnMouseUp", function(self)
 		self:StopMovingOrSizing();
 	end);
+end
+
+-- Bottom chrome that Blizzard anchors with fixed Y offsets from the original
+-- MerchantFrame layout. We capture each frame's offset from MerchantFrame's
+-- BOTTOMLEFT *before* any of our SetSize calls run, then re-apply that offset
+-- on every resize so they track the new bottom instead of floating mid-frame.
+--
+-- Targets are specified as { id, get, xShift }. `get` returns the frame (lets
+-- us reach things like MerchantFrame.MoneyFrame that have no global name in
+-- 12.0 Midnight). `xShift` adds an extra horizontal nudge after reanchor.
+-- Bottom-chrome targets that get re-anchored to MerchantFrame's BOTTOMLEFT so
+-- they track the new bottom when the user resizes. The list mirrors the named
+-- globals Blizzard ships in 12.0 Midnight; MoneyFrame/MoneyInset/MoneyBg are
+-- intentionally NOT here because their default Blizzard anchors already use
+-- BOTTOMRIGHT relative to MerchantFrame and so follow the resize natively.
+-- Addons that overlay their own money frame (EnhanceQoL, TSM) sit at higher
+-- strata and can't be reliably targeted from here -- they're an addon conflict.
+local BOTTOM_CHROME_TARGETS = {
+	{ id = "MerchantBuyBackItem",          get = function() return MerchantBuyBackItem end },
+	{ id = "MerchantRepairItemButton",     get = function() return MerchantRepairItemButton end },
+	{ id = "MerchantRepairAllButton",      get = function() return MerchantRepairAllButton end },
+	{ id = "MerchantGuildBankRepairButton",get = function() return MerchantGuildBankRepairButton end },
+};
+
+function Addon:CaptureBottomChromeOffsets()
+	if(Addon._bottomChromeOffsets) then return end
+	if(not MerchantFrame or not MerchantFrame:GetLeft()) then return end
+
+	Addon._bottomChromeOffsets = {};
+	local merchantLeft = MerchantFrame:GetLeft();
+	local merchantBottom = MerchantFrame:GetBottom();
+	for _, target in ipairs(BOTTOM_CHROME_TARGETS) do
+		local f = target.get();
+		if(f and f.GetLeft and f:GetLeft()) then
+			Addon._bottomChromeOffsets[target.id] = {
+				x = f:GetLeft() - merchantLeft,
+				y = f:GetBottom() - merchantBottom,
+				xShift = target.xShift or 0,
+				get = target.get,
+			};
+		end
+	end
+end
+
+function Addon:ReanchorBottomChrome()
+	-- No late-capture here: if we haven't captured offsets yet, the frame may
+	-- have already been resized and capturing now would record post-resize
+	-- positions instead of Blizzard's intended ones. Capture only happens at
+	-- OnEnable or first OnShow, before any of our SetSize calls.
+	if(not Addon._bottomChromeOffsets) then return end
+	for _, offset in pairs(Addon._bottomChromeOffsets) do
+		local f = offset.get();
+		if(f and f.ClearAllPoints) then
+			f:ClearAllPoints();
+			f:SetPoint("BOTTOMLEFT", MerchantFrame, "BOTTOMLEFT", offset.x + offset.xShift, offset.y);
+		end
+	end
+	Addon:LayoutBottomLeftChrome();
+end
+
+-- ============================================================================
+-- Bottom-left chrome layout (Addon:LayoutBottomLeftChrome)
+-- ============================================================================
+--
+-- The MerchantFrame chrome strip (between the item grid and the Merchant /
+-- Buyback tab buttons) has two decorative inset "trays" sunk into the
+-- bottom-left of the frame artwork in 12.0 Midnight:
+--
+--   ┌──────────────────────────────────────────────────────────────────┐
+--   │ ▒ list view ▒ list view ▒ list view ▒ list view ▒                │
+--   │ ▒ ...       ▒ ...       ▒ ...       ▒ ...       ▒                │
+--   ├──────────────────────────────────────────────────────────────────┤
+--   │ [LEFT INSET]   [RIGHT INSET]                          [Money]    │
+--   ├──────────────────────────────────────────────────────────────────┤
+--   │  Merchant   Buyback                                              │
+--   └──────────────────────────────────────────────────────────────────┘
+--
+-- Blizzard's natural layout puts MerchantBuyBackItem ("Last sold" preview
+-- slot) in the LEFT inset and the repair-button row mid-strip outside any
+-- inset. We swap that: repair-button row goes IN the LEFT inset, BuyBack
+-- preview goes IN the RIGHT inset. Cleaner visually, and reclaims the dead
+-- space the right inset would otherwise be.
+--
+-- Why this is non-trivial:
+--
+--  1. Per-button Y inconsistency. Blizzard ships the four bottom-left action
+--     buttons at slightly different Y offsets (RepairAll ~4px below
+--     RepairItem, SellAllJunk ~7px higher than the others, etc.), so the
+--     natural row looks staircase-shaped. We force them to a single baseline.
+--
+--  2. Anchor cycle hazard. Blizzard's MerchantFrame_UpdateRepairButtons
+--     chains the buttons in different directions on different runs (sometimes
+--     RepairItemButton ← RepairAllButton, sometimes the reverse), and runs
+--     after our hooks. If we install a chain of inter-button anchors in our
+--     direction, Blizzard's next SetPoint attempt in the opposite direction
+--     errors with "Cannot anchor to a region dependent on it" and aborts
+--     mid-frame. Sidestep that entirely by anchoring every button ABSOLUTELY
+--     to MerchantFrame.BOTTOMLEFT (no button depends on any other), so any
+--     anchor Blizzard tries to set later succeeds.
+--
+--  3. Hidden chain members. Not every merchant has every button: no guild
+--     means no MerchantGuildBankRepairButton, no junk means no
+--     MerchantSellAllJunkButton, etc. The smart-repair button is gated on
+--     CanGuildBankRepair() in autorepair.lua. The chain skips hidden buttons
+--     so the visible ones stay flush against each other.
+--
+--  4. BuyBack decoration follow-through. MerchantBuyBackItemNameFrame and
+--     MerchantBuyBackBG are anchored to MerchantBuyBackItem in Blizzard's
+--     XML, so moving the slot drags its decoration with it -- we only need
+--     to move the parent slot.
+--
+-- Tunables (LEFT_INSET_X, RIGHT_INSET_X) are fixed pixel offsets from
+-- MerchantFrame.BOTTOMLEFT, measured by inspection of the chrome artwork in
+-- 12.0 Midnight. If Blizzard reworks the chrome in a future patch these may
+-- need to be re-measured -- look for the visible inset trays in the bottom
+-- chrome strip.
+--
+-- This layout is applied in BOTH modes (list view on AND off): Blizzard's
+-- natural Midnight 12.0 chrome already suffers from the per-button Y mismatch
+-- and the awkward mid-strip BuyBack placement, so the clean layout is the
+-- right answer regardless. If a future user wants to opt out and get the
+-- vanilla Blizzard layout back, gate the body of LayoutBottomLeftChrome on a
+-- saved-variable flag (e.g. `Addon.db.global.ChromeLayoutCustom`).
+-- ============================================================================
+
+-- Fixed pixel offsets from MerchantFrame.BOTTOMLEFT for the two decorative
+-- inset trays in the bottom-left chrome strip. Re-measure if Blizzard
+-- changes the chrome artwork.
+local LEFT_INSET_X  = 14;    -- Repair-button row's leftmost X
+local RIGHT_INSET_X = 210;   -- BuyBack preview slot's leftmost X
+local ROW_SPACING   = 3;     -- Pixel gap between adjacent buttons in the row
+
+function Addon:LayoutBottomLeftChrome()
+	if(not Addon._bottomChromeOffsets) then return end
+
+	local buybackOffset = Addon._bottomChromeOffsets.MerchantBuyBackItem;
+	if(not buybackOffset) then return end
+
+	-- Repair-button row sits centered vertically inside the LEFT inset, which
+	-- is the same height as the BuyBack slot (Blizzard reuses the artwork).
+	-- buybackOffset.y is the captured BOTTOM-Y of the slot, so adding the
+	-- (well_height - button_height)/2 gap centers the shorter button in it.
+	local wellHeight   = MerchantBuyBackItem and MerchantBuyBackItem:GetHeight() or 64;
+	local buttonHeight = MerchantRepairItemButton and MerchantRepairItemButton:GetHeight() or 28;
+	local rowY = buybackOffset.y + (wellHeight - buttonHeight) / 2;
+
+	-- Lay out the repair-button row in the LEFT inset. Each button anchors
+	-- absolutely to MerchantFrame.BOTTOMLEFT (no inter-button anchors) at a
+	-- running X cursor, which advances by button width + ROW_SPACING for each
+	-- visible button. Hidden buttons are skipped so the visible row is flush.
+	if(MerchantRepairItemButton) then
+		local x = LEFT_INSET_X;
+		MerchantRepairItemButton:ClearAllPoints();
+		MerchantRepairItemButton:SetPoint("BOTTOMLEFT", MerchantFrame, "BOTTOMLEFT", x, rowY);
+		x = x + (MerchantRepairItemButton:GetWidth() or 28) + ROW_SPACING;
+
+		local chain = {
+			MerchantRepairAllButton,
+			MerchantGuildBankRepairButton,
+			MerchantSellAllJunkButton,
+			DjinnisVendorerSmartRepairButton,
+		};
+		for _, btn in ipairs(chain) do
+			if(btn and btn:IsShown()) then
+				btn:ClearAllPoints();
+				btn:SetPoint("BOTTOMLEFT", MerchantFrame, "BOTTOMLEFT", x, rowY);
+				x = x + (btn:GetWidth() or 28) + ROW_SPACING;
+			end
+		end
+	end
+
+	-- Move the BuyBack preview slot into the RIGHT inset. Decoration frames
+	-- (MerchantBuyBackItemNameFrame, MerchantBuyBackBG) are anchored to
+	-- MerchantBuyBackItem in Blizzard's XML and follow automatically; we only
+	-- touch the parent slot. Y stays at the captured bottom -- the slot sits
+	-- in the same vertical position in either inset, only X changes.
+	if(MerchantBuyBackItem) then
+		MerchantBuyBackItem:ClearAllPoints();
+		MerchantBuyBackItem:SetPoint("BOTTOMLEFT", MerchantFrame, "BOTTOMLEFT", RIGHT_INSET_X, buybackOffset.y);
+	end
+end
+
+-- Backwards-compat alias: autorepair.lua and earlier hook sites called this
+-- "NormalizeRepairButtonRow" before the function grew to handle the BuyBack
+-- preview slot too. Keep the old name routing to the new function so any
+-- third-party patch or older revision still resolves.
+function Addon:NormalizeRepairButtonRow()
+	Addon:LayoutBottomLeftChrome();
+end
+
+-- Per-mode minimum width. Matches the literal SetWidth values that
+-- ShowExtensionPanel / HideExtensionPanel used before the resize handles existed.
+function Addon:GetModeMinWidth()
+	local listOn = Addon.db and Addon.db.global and Addon.db.global.ListViewEnabled;
+	local extension = Addon:GetCurrentExtension();
+	if(extension == DJINNISVENDORER_EXTENSION_WIDE) then return 834 end
+	if(extension == DJINNISVENDORER_EXTENSION_NARROW) then
+		return listOn and 600 or 500;
+	end
+	return 336;
+end
+
+function Addon:GetModeMinHeight()
+	return Addon.DefaultMerchantHeight or 424;
+end
+
+-- Applies bounds + size to MerchantFrame. Called from ShowExtensionPanel /
+-- HideExtensionPanel instead of a bare SetWidth so the user's saved resize
+-- (if any, and if larger than the mode floor) is preserved across mode toggles.
+function Addon:ApplyMerchantSize()
+	-- Try to capture Blizzard's original chrome positions before any SetSize.
+	-- If the frame isn't laid out yet (typical at OnEnable), this no-ops and
+	-- we'll defer the SetSize until the first MerchantFrame:OnShow handler runs.
+	if(not Addon._bottomChromeOffsets) then
+		Addon:CaptureBottomChromeOffsets();
+	end
+
+	if(not Addon.DefaultMerchantHeight and MerchantFrame:GetHeight() and MerchantFrame:GetHeight() > 0) then
+		Addon.DefaultMerchantHeight = MerchantFrame:GetHeight();
+	end
+	MerchantFrame:SetResizable(true);
+
+	local minW = Addon:GetModeMinWidth();
+	local minH = Addon:GetModeMinHeight();
+	local maxW = math.max(minW, math.floor(UIParent:GetWidth() * 0.95));
+	local maxH = math.max(minH, math.floor(UIParent:GetHeight() * 0.95));
+	MerchantFrame:SetResizeBounds(minW, minH, maxW, maxH);
+
+	-- Without captured offsets, SetSize would push Blizzard's TOP-anchored
+	-- chrome into wrong positions we can't recover from. Defer to first OnShow.
+	if(not Addon._bottomChromeOffsets) then
+		Addon._sizeApplyPending = true;
+		return;
+	end
+
+	local savedW = Addon.db and Addon.db.global and Addon.db.global.UserMerchantWidth;
+	local savedH = Addon.db and Addon.db.global and Addon.db.global.UserMerchantHeight;
+	local w = math.max(minW, savedW or 0);
+	local h = math.max(minH, savedH or 0);
+	MerchantFrame:SetSize(w, h);
+
+	Addon:ReanchorBottomChrome();
+end
+
+function DjinnisVendorerResizeHandle_OnLoad(self)
+	-- TOOLTIP strata + high frame level so the handle isn't occluded by anything
+	-- in MerchantFrame's chrome (money inset, frame border art, etc).
+	self:SetFrameStrata("TOOLTIP");
+	self:SetFrameLevel(1000);
+	-- BL handle: re-anchor the L-bracket grippy bars from the BR corner of the
+	-- handle to the BL corner so the bracket visually points toward its corner.
+	if(self.resizeCorner == "BOTTOMLEFT") then
+		if(self.grippy) then
+			self.grippy:ClearAllPoints();
+			self.grippy:SetPoint("BOTTOMLEFT", 3, 2);
+		end
+		if(self.grippy2) then
+			self.grippy2:ClearAllPoints();
+			self.grippy2:SetPoint("BOTTOMLEFT", 2, 3);
+		end
+	end
+end
+
+function DjinnisVendorerResizeHandle_OnEnter(self)
+	GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+	GameTooltip:SetText("Drag to resize");
+	GameTooltip:Show();
+end
+
+function DjinnisVendorerResizeHandle_OnMouseDown(self, button)
+	if(button ~= "LeftButton") then return end
+	MerchantFrame:StartSizing(self.resizeCorner);
+end
+
+function DjinnisVendorerResizeHandle_OnMouseUp(self)
+	MerchantFrame:StopMovingOrSizing();
+	if(not (Addon.db and Addon.db.global)) then return end
+	Addon.db.global.UserMerchantWidth = math.floor(MerchantFrame:GetWidth() + 0.5);
+	Addon.db.global.UserMerchantHeight = math.floor(MerchantFrame:GetHeight() + 0.5);
 end
 
 local MESSAGE_PATTERN = "|cffe8608fDjinnisVendorer|r %s";
@@ -681,7 +986,7 @@ function Addon:ShowExtensionPanel()
 		-- to fit two extra item columns inside, side panel stays at its
 		-- right edge. Midnight (12.0) only ships 12 static MerchantItem
 		-- frames; going past 12 crashes Blizzard's MerchantFrame_UpdateMerchantInfo.
-		MerchantFrame:SetWidth(834);
+		Addon:ApplyMerchantSize();
 		Addon:SetMerchantItemsPerPage(12);
 		DjinnisVendorerMerchantFrameExtension:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", -10, -79);
 		DjinnisVendorerMerchantFrameExtension:Show();
@@ -691,7 +996,7 @@ function Addon:ShowExtensionPanel()
 		-- Both list view and grid view widen MerchantFrame so the side panel
 		-- can sit visually attached inside the right edge. List view needs more
 		-- room for the cost columns + names; grid view uses the original 500.
-		MerchantFrame:SetWidth(listOn and 600 or 500);
+		Addon:ApplyMerchantSize();
 		Addon:SetMerchantItemsPerPage(10);
 		DjinnisVendorerMerchantFrameExtension:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", -10, -79);
 		DjinnisVendorerMerchantFrameExtension:Show();
@@ -705,10 +1010,13 @@ function Addon:ShowExtensionPanel()
 	if(DjinnisVendorerListViewFrame) then
 		DjinnisVendorerListViewFrame:ClearAllPoints();
 		DjinnisVendorerListViewFrame:SetPoint("TOPLEFT", MerchantFrame, "TOPLEFT", 14, -72);
+		-- Bottom reservation = chrome height (~70px for buyback/repair/money row).
+		-- Tighter than the old 100 so resized frames don't show empty dark space
+		-- between the list view and the chrome.
 		if(listOn) then
-			DjinnisVendorerListViewFrame:SetPoint("BOTTOMRIGHT", MerchantFrame, "BOTTOMRIGHT", -180, 100);
+			DjinnisVendorerListViewFrame:SetPoint("BOTTOMRIGHT", MerchantFrame, "BOTTOMRIGHT", -180, 70);
 		else
-			DjinnisVendorerListViewFrame:SetPoint("BOTTOMRIGHT", MerchantFrame, "BOTTOMRIGHT", -14, 100);
+			DjinnisVendorerListViewFrame:SetPoint("BOTTOMRIGHT", MerchantFrame, "BOTTOMRIGHT", -14, 70);
 		end
 	end
 
@@ -726,7 +1034,7 @@ function Addon:ShowExtensionPanel()
 end
 
 function Addon:HideExtensionPanel()
-	MerchantFrame:SetWidth(336);
+	Addon:ApplyMerchantSize();
 	Addon:SetMerchantItemsPerPage(10);
 
 	DjinnisVendorerMerchantFrameExtension:Hide();
@@ -1990,12 +2298,16 @@ end
 hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function()
 	Addon:UpdateMerchantInfo();
 	if(Addon.ApplyListViewVisibility) then Addon:ApplyListViewVisibility() end
+	-- Blizzard re-positions buyback/repair chrome inside this update; reapply
+	-- our offsets so they don't snap back to the original Blizzard layout.
+	if(Addon.ReanchorBottomChrome) then Addon:ReanchorBottomChrome() end
 end);
 hooksecurefunc("MerchantFrame_UpdateBuybackInfo", function()
 	Addon:UpdateBuybackInfo();
 	-- Tearing down the list view when switching to buyback prevents its frame
 	-- (and our hidden prev/next page buttons) from leaking onto the buyback UI.
 	if(Addon.ApplyListViewVisibility) then Addon:ApplyListViewVisibility() end
+	if(Addon.ReanchorBottomChrome) then Addon:ReanchorBottomChrome() end
 end);
 
 -- Midnight (12.0) keeps pooled MerchantItem frames alive past the per-page
@@ -2087,13 +2399,16 @@ function Addon:UpdateMerchantInfo()
 							rarityBorder.highlight:SetVertexColor(r, g, b);
 							rarityBorder:Show();
 						elseif(Addon:IsCurrencyItem(itemLink)) then
-							local rarity = select(9, Addon:GetCurrencyInfo(itemLink));
-							local r, g, b = C_Item.GetItemQualityColor(rarity);
-							local a = 0.9;
-							if(rarity == 1) then a = 0.75 end
-							rarityBorder.border:SetVertexColor(r, g, b, a);
-							rarityBorder.highlight:SetVertexColor(r, g, b);
-							rarityBorder:Show();
+							local _, info = Addon:GetCurrencyInfo(itemLink);
+							local rarity = info and info.quality;
+							if(rarity) then
+								local r, g, b = C_Item.GetItemQualityColor(rarity);
+								local a = 0.9;
+								if(rarity == 1) then a = 0.75 end
+								rarityBorder.border:SetVertexColor(r, g, b, a);
+								rarityBorder.highlight:SetVertexColor(r, g, b);
+								rarityBorder:Show();
+							end
 						end
 					end
 					

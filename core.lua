@@ -1332,54 +1332,62 @@ function Addon:GetItemTooltipInfo(item)
 		DjinnisVendorerTooltip:SetHyperlink(itemLink);
 	end
 	local numLines = DjinnisVendorerTooltip:NumLines();
-	
-	for line = 2, numLines do
+
+	-- 12.0 returns "secret string" GetText() on some tooltip lines, and string
+	-- ops (==, strmatch, table indexing) throw on those values. Without pcall
+	-- here, a single bad line errors the whole scan and DjinnisVendorerStackSplitFrame:Open
+	-- silently bails before the popup can show.
+	local function scanLine(line)
 		local wasUsable = isUsable;
-		
+
 		local left = _G["DjinnisVendorerTooltipTextLeft" .. line];
 		local right = _G["DjinnisVendorerTooltipTextRight" .. line];
-		
+
 		if(not bindType) then
 			bindType = Addon:ScanBindType(left:GetText());
 		end
-		
+
 		if(C_Item.IsEquippableItem(itemLink)) then
 			if(left:GetText() == itemType and Addon:IsRedText(left)) then
 				if(isUsable and not notUsableReason) then notUsableReason = NOT_USABLE_TYPE end
 				isUsable = false;
 			end
-			
+
 			if(right and (right:GetText() == itemSubType or line <= 6)) then
 				if(Addon:IsRedText(right)) then
 					if(isUsable and not notUsableReason) then notUsableReason = NOT_USABLE_TYPE end
 					isUsable = false;
 				end
-				
+
 				if(not tooltipItemType) then
 					tooltipItemType = right:GetText();
 				end
 			end
-			
+
 			local equipSlotName = itemEquipLoc ~= "" and _G[itemEquipLoc] or "";
 			if(left:GetText() == equipSlotName and Addon:IsRedText(left)) then
 				if(isUsable and not notUsableReason) then notUsableReason = NOT_USABLE_TYPE end
 				isUsable = false;
 			end
 		end
-		
+
 		if(strmatch(left:GetText(), ITEM_CLASSES_PATTERN)) then
 			isUsable = isUsable and not Addon:IsRedText(left);
 			if(wasUsable and not isUsable) then notUsableReason = NOT_USABLE_CLASS end
 		end
-		
+
 		if(strmatch(left:GetText(), ITEM_RACES_PATTERN)) then
 			isUsable = isUsable and not Addon:IsRedText(left);
 			if(wasUsable and not isUsable) then notUsableReason = NOT_USABLE_RACE end
 		end
-		
+
 		if(left:GetText() == ITEM_UNIQUE) then
 			isUnique = true;
 		end
+	end
+
+	for line = 2, numLines do
+		pcall(scanLine, line);
 	end
 	
 	if(not tooltipItemType and C_Item.IsEquippableItem(itemLink)) then

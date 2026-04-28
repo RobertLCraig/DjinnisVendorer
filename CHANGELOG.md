@@ -145,3 +145,13 @@
 * Legion update.
   * With the removal of under 40 level armor types (e.g. for hunters or warriors) the addon will now sell the old types as unusable.
   * Clearing lists now requires shift right click, instead of right click only.
+
+---
+
+## [4.1.1] - 2026-04-29
+
+Hotfix for stack purchasing on WoW Midnight (12.0).
+
+### Fixes
+
+* Stack-split popup now opens again when shift-clicking a merchant item, in both the default grid view and the vertical list view. The popup was silently failing to appear because `Addon:GetItemTooltipInfo` errored out partway through its tooltip scan when 12.0 returned a "secret string" `GetText()` on certain lines (string ops like `==` and `strmatch` throw on those values). The per-line scan is now wrapped in `pcall`, so a throwing line skips itself and the rest of the scan still produces usable data.

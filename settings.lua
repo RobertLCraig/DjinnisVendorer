@@ -376,6 +376,19 @@ function Addon:GetMenuData()
 					tooltipOnButton = 1,
 					keepShownOnClick = 1,
 				},
+				{
+					text = "Show unit price",
+					isNotRadio = true,
+					checked = function() return self.db.global.ListViewShowUnitPrice; end,
+					func = function()
+						self.db.global.ListViewShowUnitPrice = not self.db.global.ListViewShowUnitPrice;
+						if(Addon.RefreshListView) then Addon:RefreshListView() end
+					end,
+					tooltipTitle = "Show unit price",
+					tooltipText = "For items sold in stacks (e.g. potions in groups of 5), show the per-unit price alongside the stack price.",
+					tooltipOnButton = 1,
+					keepShownOnClick = 1,
+				},
 			},
 		},
 		{

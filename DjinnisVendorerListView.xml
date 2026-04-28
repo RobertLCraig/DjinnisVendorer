@@ -21,7 +21,7 @@
 				<FontString parentKey="copperText" inherits="NumberFontNormalSmall" justifyH="RIGHT" justifyV="MIDDLE">
 					<Size x="26" y="14"/>
 					<Anchors>
-						<Anchor point="RIGHT" x="-4" y="0"/>
+						<Anchor point="RIGHT" x="-4" y="7"/>
 					</Anchors>
 				</FontString>
 				<FontString parentKey="silverText" inherits="NumberFontNormalSmall" justifyH="RIGHT" justifyV="MIDDLE">
@@ -39,7 +39,7 @@
 				<FontString parentKey="costText" inherits="NumberFontNormalSmall" justifyH="RIGHT" justifyV="MIDDLE">
 					<Size y="14"/>
 					<Anchors>
-						<Anchor point="RIGHT" x="-4" y="0"/>
+						<Anchor point="RIGHT" x="-4" y="7"/>
 						<Anchor point="LEFT" relativeKey="$parent.goldText" relativePoint="LEFT" x="0" y="0"/>
 					</Anchors>
 				</FontString>
@@ -47,6 +47,12 @@
 					<Size x="28" y="14"/>
 					<Anchors>
 						<Anchor point="RIGHT" relativeKey="$parent.goldText" relativePoint="LEFT" x="-4" y="0"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="unitPriceText" inherits="GameFontDisableSmall" justifyH="RIGHT" justifyV="MIDDLE">
+					<Size x="140" y="10"/>
+					<Anchors>
+						<Anchor point="RIGHT" x="-4" y="-9"/>
 					</Anchors>
 				</FontString>
 				<FontString parentKey="nameText" inherits="GameFontHighlightSmall" justifyH="LEFT" justifyV="TOP" maxLines="2" nonspacewrap="true">
@@ -59,7 +65,7 @@
 					<Size y="10"/>
 					<Anchors>
 						<Anchor point="BOTTOMLEFT" x="34" y="3"/>
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.stackText" relativePoint="BOTTOMLEFT" x="-4" y="0"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.unitPriceText" relativePoint="BOTTOMLEFT" x="-4" y="0"/>
 					</Anchors>
 				</FontString>
 			</Layer>

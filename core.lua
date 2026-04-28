@@ -385,6 +385,7 @@ function Addon:OnInitialize()
 			ListViewShowStackSize = true,
 			ListViewShowBindType = false,
 			ListViewShowRepDiscount = false,
+			ListViewShowUnitPrice = true,
 
 			ExpandTutorialShown = false,
 			FilteringButtonAlertShown = false,
@@ -1773,9 +1774,13 @@ function Addon:GetNpcIdFromGUID(guid)
 	if (guid == nil or type(guid) ~= "string") then
 		return nil;
 	end
-	
-	--Creature-0-3102-0-155-100995-00000D1C2E
-	local _, _, _, _, _, npcId = strsplit("-", guid);
+
+	-- Creature-0-3102-0-155-100995-00000D1C2E
+	-- pcall guards against 12.0 "secret string" GUIDs that pass type() but throw on string ops.
+	local ok, _, _, _, _, _, npcId = pcall(strsplit, "-", guid);
+	if (not ok) then
+		return nil;
+	end
 	return tonumber(npcId);
 end
 

@@ -98,6 +98,23 @@ local function CollectPlayerFactionStandings()
 	return map;
 end
 
+-- Tooltip line text in 12.0 can be a "secret string" that throws when used
+-- as a regular table key. pcall the scan so a tainted line just fails the
+-- discount detection silently instead of warn-spamming once per row.
+local function ScanTooltipForDiscount(standings)
+	for line = 1, DjinnisVendorerTooltip:NumLines() do
+		local left = _G["DjinnisVendorerTooltipTextLeft" .. line];
+		local text = left and left:GetText();
+		if(text) then
+			local standing = standings[text];
+			if(standing and STANDING_DISCOUNT[standing]) then
+				return STANDING_DISCOUNT[standing];
+			end
+		end
+	end
+	return nil;
+end
+
 local function ComputeMerchantDiscount()
 	if(not UnitExists("npc")) then return nil end
 	local standings = CollectPlayerFactionStandings();
@@ -106,19 +123,9 @@ local function ComputeMerchantDiscount()
 	DjinnisVendorerTooltip:ClearLines();
 	DjinnisVendorerTooltip:SetOwner(UIParent, "ANCHOR_NONE");
 	DjinnisVendorerTooltip:SetUnit("npc");
-	local discount;
-	for line = 1, DjinnisVendorerTooltip:NumLines() do
-		local left = _G["DjinnisVendorerTooltipTextLeft" .. line];
-		local text = left and left:GetText();
-		if(text) then
-			local standing = standings[text];
-			if(standing and STANDING_DISCOUNT[standing]) then
-				discount = STANDING_DISCOUNT[standing];
-				break;
-			end
-		end
-	end
+	local ok, discount = pcall(ScanTooltipForDiscount, standings);
 	DjinnisVendorerTooltip:Hide();
+	if(not ok) then return nil end
 	return discount;
 end
 
@@ -165,6 +172,37 @@ local function FormatExtendedCost(rawIndex)
 	return table.concat(segments, " ");
 end
 
+-- Compact, single-line money string for embedding in the info subtitle row.
+-- Uses smaller letter suffixes than PopulateMoneyColumns since the info line
+-- is GameFontDisableSmall and short on horizontal room.
+local function FormatCopperInline(copper)
+	if(not copper or copper <= 0) then return "" end
+	local g = math.floor(copper / 10000);
+	local s = math.floor((copper % 10000) / 100);
+	local c = copper % 100;
+	local parts = {};
+	if(g > 0) then tinsert(parts, BreakUpLargeNumbers(g) .. "|cffffd700g|r") end
+	if(s > 0) then tinsert(parts, s .. "|cffc7c7cfs|r") end
+	if(c > 0) then tinsert(parts, c .. "|cffeda55fc|r") end
+	return table.concat(parts, " ");
+end
+
+local function FormatExtendedCostInline(rawIndex, divisor)
+	local segments = {};
+	local numCost = rawGetCostInfo(rawIndex) or 0;
+	local d = divisor or 1;
+	for i = 1, numCost do
+		local texture, value = rawGetCostItem(rawIndex, i);
+		if(value and value > 0 and texture) then
+			local v = math.floor(value / d);
+			if(v > 0) then
+				tinsert(segments, string.format("%d|T%s:10:10:0:0|t", v, texture));
+			end
+		end
+	end
+	return table.concat(segments, " ");
+end
+
 local function PopulateStackText(row, stack)
 	if(Addon.db.global.ListViewShowStackSize and stack and stack > 1) then
 		row.stackText:SetText("|cff808080x" .. stack .. "|r");
@@ -179,6 +217,25 @@ local function ClearCostColumns(row)
 	row.copperText:SetText("");
 	row.costText:SetText("");
 	row.stackText:SetText("");
+	row.unitPriceText:SetText("");
+end
+
+local function PopulateUnitPrice(row, data)
+	if(not Addon.db.global.ListViewShowUnitPrice or not data.stack or data.stack <= 1) then
+		row.unitPriceText:SetText("");
+		return;
+	end
+	local unitText;
+	if(data.hasExtendedCost and not data.isBuyback) then
+		unitText = FormatExtendedCostInline(data.rawIndex, data.stack);
+	elseif(data.price and data.price > 0) then
+		unitText = FormatCopperInline(math.floor(data.price / data.stack));
+	end
+	if(unitText and unitText ~= "") then
+		row.unitPriceText:SetText(unitText .. " ea");
+	else
+		row.unitPriceText:SetText("");
+	end
 end
 
 ------------------------------------------------------------
@@ -371,20 +428,27 @@ function DjinnisVendorerListRow_OnClick(self, button)
 	local rawIndex = self.data.rawIndex;
 	local link = self.data.link;
 
-	-- HandleModifiedItemClick covers all modifier clicks the standard merchant
-	-- button supports: shift = chat-link, ctrl = dressup/preview, alt = compare.
-	-- It returns true when it consumed the click, false otherwise.
+	-- SPLITSTACK and CHATLINK / EXPANDITEM share the shift modifier by default,
+	-- and HandleModifiedItemClick can consume the shift-click before
+	-- IsModifiedClick("SPLITSTACK") gets a chance. Resolve the conflict
+	-- explicitly: if a chat editbox is focused the user wants chat-link, so let
+	-- HandleModifiedItemClick run first; otherwise prefer stack split.
+	if(not self.data.isBuyback and not ChatEdit_GetActiveWindow()
+	   and IsModifiedClick("SPLITSTACK")
+	   and Addon.db.global.UseImprovedStackSplit
+	   and DjinnisVendorerStackSplitFrame) then
+		DjinnisVendorerStackSplitFrame:Open(rawIndex, self, nil, true);
+		return;
+	end
+
+	-- HandleModifiedItemClick covers shift = chat-link (when chat is focused),
+	-- ctrl = dressup/preview, alt = compare, and returns true when consumed.
 	if(link and HandleModifiedItemClick(link)) then
 		return;
 	end
 
 	if(self.data.isBuyback) then
 		BuybackItem(rawIndex);
-		return;
-	end
-
-	if(IsModifiedClick("SPLITSTACK") and Addon.db.global.UseImprovedStackSplit and DjinnisVendorerStackSplitFrame) then
-		DjinnisVendorerStackSplitFrame:Open(rawIndex, self, nil, true);
 		return;
 	end
 
@@ -520,6 +584,7 @@ local function InitializeRow(row, data)
 		row.costText:SetText("");
 		PopulateMoneyColumns(row, data.price);
 	end
+	PopulateUnitPrice(row, data);
 
 	ApplyDecorations(row, data);
 

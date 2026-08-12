@@ -433,7 +433,7 @@ function DjinnisVendorerListRow_OnClick(self, button)
 	-- IsModifiedClick("SPLITSTACK") gets a chance. Resolve the conflict
 	-- explicitly: if a chat editbox is focused the user wants chat-link, so let
 	-- HandleModifiedItemClick run first; otherwise prefer stack split.
-	if(not self.data.isBuyback and not ChatEdit_GetActiveWindow()
+	if(not self.data.isBuyback and not ChatFrameUtil.GetActiveWindow()
 	   and IsModifiedClick("SPLITSTACK")
 	   and Addon.db.global.UseImprovedStackSplit
 	   and DjinnisVendorerStackSplitFrame) then

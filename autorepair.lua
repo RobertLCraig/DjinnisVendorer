@@ -182,10 +182,10 @@ end
 function Addon:UPDATE_INVENTORY_DURABILITY()
 	local repairAllCost, canRepair = GetRepairAllCost();
 	if(not canRepair) then
-		SetDesaturation(DjinnisVendorerSmartRepairButtonIcon, true);
+		DjinnisVendorerSmartRepairButtonIcon:SetDesaturated(true);
 		DjinnisVendorerSmartRepairButton:Disable();
 	else
-		SetDesaturation(DjinnisVendorerSmartRepairButtonIcon, false);
+		DjinnisVendorerSmartRepairButtonIcon:SetDesaturated(false);
 		DjinnisVendorerSmartRepairButton:Enable();
 	end
 end
@@ -201,10 +201,10 @@ function Addon:UpdateRepairButtons()
 
 		local repairAllCost, canRepair = GetRepairAllCost();
 		if(not canRepair) then
-			SetDesaturation(DjinnisVendorerSmartRepairButtonIcon, true);
+			DjinnisVendorerSmartRepairButtonIcon:SetDesaturated(true);
 			DjinnisVendorerSmartRepairButton:Disable();
 		else
-			SetDesaturation(DjinnisVendorerSmartRepairButtonIcon, false);
+			DjinnisVendorerSmartRepairButtonIcon:SetDesaturated(false);
 			DjinnisVendorerSmartRepairButton:Enable();
 		end
 	else

@@ -1,11 +1,17 @@
 # Release Notes
 
-## Version: 4.1.1
+## Version: 4.1.2
 
 <!-- Write release notes below this line. They will be extracted by release.ps1 -->
 
-Hotfix for stack purchasing on WoW Midnight (12.0).
+Compatibility update for WoW Midnight patch 12.1.0.
 
 ### Fixes
 
-* Stack-split popup now opens again when shift-clicking a merchant item, in both the default grid view and the vertical list view. The popup was silently failing to appear because `Addon:GetItemTooltipInfo` errored out partway through its tooltip scan when 12.0 returned a "secret string" `GetText()` on certain lines (string ops like `==` and `strmatch` throw on those values). The per-line scan is now wrapped in `pcall`, so a throwing line skips itself and the rest of the scan still produces usable data.
+* Repair button no longer throws `attempt to call a nil value` on every durability change. 12.1.0 deleted the global `SetDesaturation(texture, enable)` helper and left no deprecated fallback, so all four call sites in `autorepair.lua` were calling nil. They now call `Texture:SetDesaturated` directly. `UPDATE_INVENTORY_DURABILITY` fires on any durability change anywhere in the world, so this threw in combat as well as at a vendor.
+* Shift-click stack split works again. 12.1.0 moved `ChatEdit_GetActiveWindow` to `ChatFrameUtil.GetActiveWindow`.
+
+### Changes
+
+* Interface version bumped to 120100.
+* Screenshots and the CurseForge description are no longer packaged into the addon zip.

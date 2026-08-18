@@ -193,6 +193,7 @@ $ExcludeNames = @(
     ".git"
     ".github"
     ".gitignore"
+    ".gitattributes"
     ".claude"
     "CLAUDE.md"
     "CHANGELOG.md"

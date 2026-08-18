@@ -4,6 +4,7 @@ enable-nolib-creation: no
 ignore:
   - .git
   - .gitignore
+  - .gitattributes
   - .github
   - .claude
   - CLAUDE.md

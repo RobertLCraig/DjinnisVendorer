@@ -203,6 +203,8 @@ $ExcludeNames = @(
     "RELEASE_NOTES.md"
     "pkgmeta.yaml"
     "releases"
+    "Docs"
+    "CURSEFORGE.md"
 )
 
 $ZipName = "DjinnisVendorer-$Tag.zip"

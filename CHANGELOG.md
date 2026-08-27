@@ -1,3 +1,18 @@
+## 4.1.2
+* Patch 12.1.0. Repair button no longer throws `attempt to call a nil value` on every durability change: 12.1.0 deleted the global `SetDesaturation` helper, so all four call sites in `autorepair.lua` now call `Texture:SetDesaturated` directly.
+* Shift-click stack split works again. 12.1.0 moved `ChatEdit_GetActiveWindow` to `ChatFrameUtil.GetActiveWindow`.
+* Screenshots and the CurseForge description are no longer packaged into the addon zip.
+
+## 4.1.1
+* Stack-split popup opens again when shift-clicking a merchant item. The tooltip scan errored on a 12.0 secret string; each line is now scanned under `pcall`.
+
+## 4.1.0
+* Patch 12.0.5. Every API call migrated to its namespaced form (`C_Item.*`, `C_Container.*`, `C_CurrencyInfo.*`, `C_MerchantFrame.*`), so the addon no longer depends on Blizzard deprecation fallbacks.
+* Settings and Quick Filters menus moved off `EasyMenu` / `UIDropDownMenu` onto `MenuUtil.CreateContextMenu`.
+* Vertical list view now covers the buyback tab as well as the merchant tab.
+* Stack column shows inventory max stack rather than the merchant per-purchase quantity.
+* Modifier clicks in the list view route through `HandleModifiedItemClick`, restoring ctrl-preview, shift-link and alt-compare.
+
 ## 4.0.1
 * Attempted blind fix at a nil error.
 

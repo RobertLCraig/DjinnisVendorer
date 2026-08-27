@@ -1,6 +1,41 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
 
+	<!--
+		One currency in a row's price. Blizzard's SmallDenominationTemplate does
+		the same job, but it finds its texture by the global name $parentTexture
+		and these rows come out of a ScrollBox pool with no names, so that name
+		would never resolve. This is the same widget with parentKey lookups and
+		our own scripts instead.
+
+		Mouse CLICKS are disabled and only motion is kept (set in
+		DjinnisVendorerListCostButton_OnLoad), so hovering gives the currency its
+		tooltip while a click still falls through to the row and buys the item.
+	-->
+	<Button name="DjinnisVendorerListCostButtonTemplate" virtual="true">
+		<Size x="32" y="14"/>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture parentKey="icon">
+					<Size x="13" y="13"/>
+					<Anchors>
+						<Anchor point="RIGHT"/>
+					</Anchors>
+				</Texture>
+				<FontString parentKey="text" inherits="NumberFontNormalSmall" justifyH="RIGHT" justifyV="MIDDLE">
+					<Anchors>
+						<Anchor point="RIGHT" relativeKey="$parent.icon" relativePoint="LEFT" x="-1" y="0"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad function="DjinnisVendorerListCostButton_OnLoad"/>
+			<OnEnter function="DjinnisVendorerListCostButton_OnEnter"/>
+			<OnLeave function="DjinnisVendorerListCostButton_OnLeave"/>
+		</Scripts>
+	</Button>
+
 	<Button name="DjinnisVendorerListRowTemplate" virtual="true" registerForClicks="LeftButtonUp,RightButtonUp">
 		<Size y="40"/>
 		<Layers>
@@ -36,15 +71,14 @@
 						<Anchor point="RIGHT" relativeKey="$parent.silverText" relativePoint="LEFT" x="-3" y="0"/>
 					</Anchors>
 				</FontString>
-				<FontString parentKey="costText" inherits="NumberFontNormalSmall" justifyH="RIGHT" justifyV="MIDDLE">
-					<Size y="14"/>
-					<Anchors>
-						<Anchor point="RIGHT" x="-4" y="7"/>
-						<Anchor point="LEFT" relativeKey="$parent.goldText" relativePoint="LEFT" x="0" y="0"/>
-					</Anchors>
-				</FontString>
+				<!--
+					The stack column's width is no longer fixed here. It is set
+					per row from Addon.db.global.ListViewStackWidth, because 28
+					pixels truncated a four-digit max stack to "x1...". The size
+					below is only the width a row has before its first populate.
+				-->
 				<FontString parentKey="stackText" inherits="NumberFontNormalSmall" justifyH="RIGHT" justifyV="MIDDLE">
-					<Size x="28" y="14"/>
+					<Size x="40" y="14"/>
 					<Anchors>
 						<Anchor point="RIGHT" relativeKey="$parent.goldText" relativePoint="LEFT" x="-4" y="0"/>
 					</Anchors>
@@ -71,6 +105,27 @@
 			</Layer>
 		</Layers>
 		<Frames>
+			<!--
+				Up to three currencies in one price, which is the ceiling
+				GetMerchantItemCostInfo returns. They sit over the same strip as
+				the g/s/c columns, right to left, and only one of the two kinds
+				of price is ever shown at a time.
+			-->
+			<Button parentKey="costButton1" inherits="DjinnisVendorerListCostButtonTemplate" hidden="true">
+				<Anchors>
+					<Anchor point="RIGHT" x="-4" y="7"/>
+				</Anchors>
+			</Button>
+			<Button parentKey="costButton2" inherits="DjinnisVendorerListCostButtonTemplate" hidden="true">
+				<Anchors>
+					<Anchor point="RIGHT" relativeKey="$parent.costButton1" relativePoint="LEFT" x="-6" y="0"/>
+				</Anchors>
+			</Button>
+			<Button parentKey="costButton3" inherits="DjinnisVendorerListCostButtonTemplate" hidden="true">
+				<Anchors>
+					<Anchor point="RIGHT" relativeKey="$parent.costButton2" relativePoint="LEFT" x="-6" y="0"/>
+				</Anchors>
+			</Button>
 			<Button parentKey="iconButton" enableMouse="false">
 				<Size x="26" y="26"/>
 				<Anchors>
@@ -137,9 +192,44 @@
 			</Layer>
 		</Layers>
 		<Frames>
+			<!--
+				The list had no header, so there was nowhere a drag handle could
+				live. This strip exists to give the quantity/price divider
+				somewhere to sit; it is deliberately thin and unlabelled so it
+				costs the list one row of height and no visual noise.
+			-->
+			<Frame parentKey="header">
+				<Size y="12"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="22" y="-3"/>
+					<Anchor point="TOPRIGHT" x="-4" y="-3"/>
+				</Anchors>
+				<Frames>
+					<Button parentKey="stackDivider">
+						<Size x="9" y="12"/>
+						<Layers>
+							<Layer level="ARTWORK">
+								<Texture parentKey="grip">
+									<Size x="1" y="10"/>
+									<Anchors>
+										<Anchor point="CENTER"/>
+									</Anchors>
+									<Color r="1" g="0.82" b="0" a="0.35"/>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnEnter function="DjinnisVendorerListStackDivider_OnEnter"/>
+							<OnLeave function="DjinnisVendorerListStackDivider_OnLeave"/>
+							<OnMouseDown function="DjinnisVendorerListStackDivider_OnMouseDown"/>
+							<OnMouseUp function="DjinnisVendorerListStackDivider_OnMouseUp"/>
+						</Scripts>
+					</Button>
+				</Frames>
+			</Frame>
 			<Frame parentKey="scrollBox" inherits="WowScrollBoxList">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="22" y="-4"/>
+					<Anchor point="TOPLEFT" x="22" y="-17"/>
 					<Anchor point="BOTTOMRIGHT" x="-4" y="4"/>
 				</Anchors>
 			</Frame>

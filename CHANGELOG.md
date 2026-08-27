@@ -1,3 +1,7 @@
+## 4.1.3
+* Vertical list view: the quantity column no longer truncates a four-digit max stack to `x1...`. It starts at 40 pixels and is draggable from a divider in a new header strip; the width is saved across a /reload.
+* Vertical list view: hovering the currency icon or amount in a price now shows that currency's own tooltip, naming it and stating how many you hold. Each currency in a multi-token price gets its own. The icon was previously text markup inside a FontString, which takes no mouse input.
+
 ## 4.1.2
 * Patch 12.1.0. Repair button no longer throws `attempt to call a nil value` on every durability change: 12.1.0 deleted the global `SetDesaturation` helper, so all four call sites in `autorepair.lua` now call `Texture:SetDesaturated` directly.
 * Shift-click stack split works again. 12.1.0 moved `ChatEdit_GetActiveWindow` to `ChatFrameUtil.GetActiveWindow`.

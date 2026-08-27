@@ -381,6 +381,10 @@ function Addon:OnInitialize()
 			-- "name", "price", or "quality". Applied per segment so matches
 			-- stay above non-matches.
 			ListViewSortKey = "default",
+			-- Width in pixels of the list view's quantity column, set by dragging
+			-- the divider in the list header. It used to be a fixed 28 in the
+			-- row template, which truncated a four-digit max stack to "x1...".
+			ListViewStackWidth = 40,
 			-- Per-row info toggles for the list view.
 			ListViewShowStackSize = true,
 			ListViewShowBindType = false,

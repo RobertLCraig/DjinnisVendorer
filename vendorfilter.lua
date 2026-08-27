@@ -627,6 +627,14 @@ function Addon:RawSetTooltipMerchantItem(tooltip, index)
 	return _GameTooltip_SetMerchantItem(tooltip, index);
 end
 
+-- The list view walks raw merchant indices, so it must not go through the
+-- GameTooltip.SetMerchantCostItem wrapper above: that one maps a FILTERED index
+-- to a raw one, and handing it a raw index maps it a second time.
+function Addon:RawSetTooltipMerchantCostItem(tooltip, index, costIndex)
+	if(not index or not costIndex or not tooltip) then return end
+	return _GameTooltip_SetMerchantCostItem(tooltip, index, costIndex);
+end
+
 function Addon:ResetFilteredItems()
 	FilteredMerchantItems = {};
 end

@@ -11,6 +11,28 @@ local ADDON_NAME, Addon = ...;
 local ROW_HEIGHT = 40;
 local SEPARATOR_HEIGHT = 4;
 
+-- Up to three currencies in one price; GetMerchantItemCostInfo returns no more.
+local MAX_COST_BUTTONS = 3;
+
+-- The stack column is user-draggable. The bounds keep it from being dragged to
+-- nothing (unreadable again) or wide enough to swallow the item-name column.
+local STACK_WIDTH_MIN = 20;
+local STACK_WIDTH_MAX = 90;
+local STACK_WIDTH_DEFAULT = 40;
+
+-- Distance from a row's right edge to the LEFT edge of the gold column, which
+-- is where the stack column ends. Derived from the g/s/c anchors in the row
+-- template: 4 inset, then copper 26, gap 3, silver 26, gap 3, gold 84.
+local PRICE_STRIP_WIDTH = 146;
+-- ... and the 4-pixel gap between the gold column and the stack column.
+local STACK_GUTTER = 4;
+
+local function GetStackWidth()
+	local w = Addon.db and Addon.db.global and Addon.db.global.ListViewStackWidth;
+	if(type(w) ~= "number") then return STACK_WIDTH_DEFAULT end
+	return math.max(STACK_WIDTH_MIN, math.min(STACK_WIDTH_MAX, w));
+end
+
 local KIND_ITEM = "item";
 local KIND_SEPARATOR = "separator";
 
@@ -34,6 +56,10 @@ end
 
 local function rawSetTooltipMerchantItem(tooltip, index)
 	Addon:RawSetTooltipMerchantItem(tooltip, index);
+end
+
+local function rawSetTooltipMerchantCostItem(tooltip, index, costIndex)
+	Addon:RawSetTooltipMerchantCostItem(tooltip, index, costIndex);
 end
 
 local function rawGetCostInfo(index)
@@ -160,16 +186,40 @@ local function PopulateMoneyColumns(row, copper)
 	row.copperText:SetText(c > 0 and (c .. "|cffeda55fc|r") or "");
 end
 
-local function FormatExtendedCost(rawIndex)
-	local segments = {};
-	local numCost = rawGetCostInfo(rawIndex) or 0;
+local function HideCostButtons(row)
+	for i = 1, MAX_COST_BUTTONS do
+		local button = row["costButton" .. i];
+		if(button) then button:Hide() end
+	end
+end
+
+-- Draws an extended-cost price as up to three real buttons instead of |T...|t
+-- markup inside a FontString. Markup takes no mouse input, so the currency icon
+-- could never be hovered and the list could not say what a token was; a button
+-- can carry SetMerchantCostItem's tooltip, "you have N" line included.
+local function PopulateCostButtons(row, rawIndex)
+	local numCost = math.min(rawGetCostInfo(rawIndex) or 0, MAX_COST_BUTTONS);
+	local shown = 0;
 	for i = 1, numCost do
-		local texture, value, link, currencyName = rawGetCostItem(rawIndex, i);
+		local texture, value = rawGetCostItem(rawIndex, i);
 		if(value and value > 0 and texture) then
-			tinsert(segments, string.format("%d|T%s:14:14:0:0|t", value, texture));
+			shown = shown + 1;
+			local button = row["costButton" .. shown];
+			if(button) then
+				-- index/costIndex are what the tooltip handler reads back.
+				button.index = rawIndex;
+				button.costIndex = i;
+				button.text:SetText(value);
+				button.icon:SetTexture(texture);
+				button:SetWidth(button.text:GetStringWidth() + 15);
+				button:Show();
+			end
 		end
 	end
-	return table.concat(segments, " ");
+	for i = shown + 1, MAX_COST_BUTTONS do
+		local button = row["costButton" .. i];
+		if(button) then button:Hide() end
+	end
 end
 
 -- Compact, single-line money string for embedding in the info subtitle row.
@@ -204,6 +254,10 @@ local function FormatExtendedCostInline(rawIndex, divisor)
 end
 
 local function PopulateStackText(row, stack)
+	-- Width is applied on every populate rather than once at load: rows come out
+	-- of a ScrollBox pool, so a row created before the user dragged the divider
+	-- would otherwise keep the old width forever.
+	row.stackText:SetWidth(GetStackWidth());
 	if(Addon.db.global.ListViewShowStackSize and stack and stack > 1) then
 		row.stackText:SetText("|cff808080x" .. stack .. "|r");
 	else
@@ -215,9 +269,9 @@ local function ClearCostColumns(row)
 	row.goldText:SetText("");
 	row.silverText:SetText("");
 	row.copperText:SetText("");
-	row.costText:SetText("");
 	row.stackText:SetText("");
 	row.unitPriceText:SetText("");
+	HideCostButtons(row);
 end
 
 local function PopulateUnitPrice(row, data)
@@ -423,6 +477,37 @@ function DjinnisVendorerListRow_OnLeave(self)
 	if(ShoppingTooltip2) then ShoppingTooltip2:Hide() end
 end
 
+------------------------------------------------------------
+-- Currency buttons inside a row's price
+------------------------------------------------------------
+
+function DjinnisVendorerListCostButton_OnLoad(self)
+	-- Keep hover, give up clicks. Without this the button would swallow the
+	-- click that buys the item, because a mouse-enabled child does not pass a
+	-- click up to its parent.
+	self:SetMouseClickEnabled(false);
+	self:SetMouseMotionEnabled(true);
+end
+
+function DjinnisVendorerListCostButton_OnEnter(self)
+	if(not self.index or not self.costIndex) then return end
+	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+	rawSetTooltipMerchantCostItem(GameTooltip, self.index, self.costIndex);
+	GameTooltip:Show();
+end
+
+function DjinnisVendorerListCostButton_OnLeave(self)
+	-- Entering this button fired the row's OnLeave, so coming off it has to put
+	-- the row's own tooltip back rather than leaving the mouse over a row with
+	-- nothing showing.
+	local row = self:GetParent();
+	if(row and row:IsMouseOver()) then
+		DjinnisVendorerListRow_OnEnter(row);
+	else
+		GameTooltip:Hide();
+	end
+end
+
 function DjinnisVendorerListRow_OnClick(self, button)
 	if(not self.data or self.data.kind ~= KIND_ITEM) then return end
 	local rawIndex = self.data.rawIndex;
@@ -572,16 +657,16 @@ local function InitializeRow(row, data)
 	row.nameText:SetText(data.name or "");
 
 	-- Cost: gold-priced items use the g/s/c columns; extended-cost items
-	-- (currency tokens) use costText, which overlays the same area.
+	-- (currency tokens) use the cost buttons, which overlay the same area.
 	-- Stack column shows inventory max stack, not merchant purchase qty.
 	PopulateStackText(row, data.maxStack);
 	if(data.hasExtendedCost) then
 		row.goldText:SetText("");
 		row.silverText:SetText("");
 		row.copperText:SetText("");
-		row.costText:SetText(FormatExtendedCost(data.rawIndex));
+		PopulateCostButtons(row, data.rawIndex);
 	else
-		row.costText:SetText("");
+		HideCostButtons(row);
 		PopulateMoneyColumns(row, data.price);
 	end
 	PopulateUnitPrice(row, data);
@@ -617,12 +702,79 @@ local function GetView()
 	return DjinnisVendorerListViewFrame.view;
 end
 
+------------------------------------------------------------
+-- Quantity/price divider in the header strip
+------------------------------------------------------------
+
+-- Puts the divider over the boundary the stack column actually has. Both the
+-- header and a row end at the same right edge, so one offset serves for both.
+local function PositionStackDivider()
+	local frame = DjinnisVendorerListViewFrame;
+	if(not frame or not frame.header) then return end
+	frame.header.stackDivider:ClearAllPoints();
+	frame.header.stackDivider:SetPoint("RIGHT", frame.header, "RIGHT",
+		-(PRICE_STRIP_WIDTH + STACK_GUTTER + GetStackWidth()), 0);
+end
+
+local function SetStackWidth(width)
+	width = math.max(STACK_WIDTH_MIN, math.min(STACK_WIDTH_MAX, width));
+	if(GetStackWidth() == width) then return end
+	Addon.db.global.ListViewStackWidth = width;
+	PositionStackDivider();
+	-- Widen the rows that are on screen right now. Deliberately NOT
+	-- Addon:RefreshListView(), which re-reads every merchant item and every
+	-- tooltip: this runs on OnUpdate while the divider is being dragged, so a
+	-- full re-gather per frame would be felt. Rows still off screen pick the
+	-- width up from PopulateStackText when the pool populates them.
+	local scrollBox = DjinnisVendorerListViewFrame and DjinnisVendorerListViewFrame.scrollBox;
+	if(scrollBox and scrollBox.ForEachFrame) then
+		scrollBox:ForEachFrame(function(row)
+			if(row.stackText) then row.stackText:SetWidth(width) end
+		end);
+	end
+end
+
+function DjinnisVendorerListStackDivider_OnEnter(self)
+	self.grip:SetColorTexture(1, 0.82, 0, 0.9);
+	SetCursor("UI_RESIZE_CURSOR");
+end
+
+function DjinnisVendorerListStackDivider_OnLeave(self)
+	if(not self.dragging) then
+		self.grip:SetColorTexture(1, 0.82, 0, 0.35);
+		ResetCursor();
+	end
+end
+
+function DjinnisVendorerListStackDivider_OnMouseDown(self)
+	local x = GetCursorPosition();
+	self.dragging = true;
+	self.dragStartX = x / self:GetEffectiveScale();
+	self.dragStartWidth = GetStackWidth();
+	self:SetScript("OnUpdate", function(handle)
+		local cx = GetCursorPosition() / handle:GetEffectiveScale();
+		-- Dragging LEFT widens the column, because the column grows leftwards
+		-- away from the price strip pinned to the right edge.
+		SetStackWidth(handle.dragStartWidth + (handle.dragStartX - cx));
+	end);
+end
+
+function DjinnisVendorerListStackDivider_OnMouseUp(self)
+	self.dragging = false;
+	self:SetScript("OnUpdate", nil);
+	if(not self:IsMouseOver()) then
+		self.grip:SetColorTexture(1, 0.82, 0, 0.35);
+		ResetCursor();
+	end
+end
+
 function DjinnisVendorerListViewFrame_OnLoad(self)
 	-- Defer view creation until first show so ScrollUtil/MerchantFrame are ready.
 end
 
 function DjinnisVendorerListViewFrame_OnShow(self)
 	GetView();
+	PositionStackDivider();
 	Addon:RefreshListView();
 end
 

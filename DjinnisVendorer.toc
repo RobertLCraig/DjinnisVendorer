@@ -2,7 +2,7 @@
 ## Title: DjinnisVendorer
 ## Notes: Improved merchant frames
 ## Author: Sonaza + Djinni
-## Version: 4.1.2
+## Version: 4.1.3
 ## OptionalDeps: Ace3, CanIMogIt
 ## SavedVariables: DjinnisVendorerDB
 

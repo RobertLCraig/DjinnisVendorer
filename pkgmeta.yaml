@@ -16,8 +16,9 @@ ignore:
   - RELEASE_NOTES.md
   - pkgmeta.yaml
   - releases
-  - Docs
+  - docs
   - CURSEFORGE.md
+  - DjinnisVendorerDB.lua
 
 manual-changelog:
   filename: CHANGELOG.md

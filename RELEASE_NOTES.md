@@ -1,8 +1,10 @@
 # Release Notes
 
-## Version: 4.1.3
+## Version: 4.1.4
 
 <!-- Write release notes below this line. They will be extracted by release.ps1 -->
+
+Updated for patch 12.1.5.
 
 Two fixes to the vertical list view, both about prices and quantities you could not read.
 
